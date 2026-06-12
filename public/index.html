@@ -35,7 +35,7 @@ body, html {
   -webkit-user-select: none; user-select: none;
 }
 
-/* ÉCRAN DE CHARGEMENT SÉCURISÉ (Transition CSS pure pour éviter les blocages) */
+/* ÉCRAN DE CHARGEMENT SÉCURISÉ */
 #screen-loading {
   position: fixed; inset: 0; z-index: 999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -119,6 +119,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 
 #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; }
 
+/* HUD DE JEU */
 .hud-container {
   position: absolute; inset: 0; pointer-events: none; z-index: 10;
   display: flex; flex-direction: column; justify-content: space-between; padding: 14px;
@@ -142,6 +143,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
   cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 .btn-action.leave { max-width: 65px; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
+.btn-action.audio { max-width: 65px; }
 
 .turn-status { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.82rem; color: #fff; }
 .pulse-indicator { width: 9px; height: 9px; border-radius: 50%; background-color: var(--accent-gold); animation: pulseGlow 1.5s infinite; }
@@ -159,6 +161,10 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 </head>
 <body>
+
+<audio id="bg-music" loop>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+</audio>
 
 <div id="screen-loading">
   <div class="loader-content">
@@ -244,6 +250,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 
   <div class="hud-bottom-bar">
     <button class="btn-action leave" onclick="exitToMainMenu()">🚪</button>
+    <button class="btn-action audio" id="btn-audio" onclick="toggleAudioMute()">🔊</button>
     <button class="btn-action" id="btn-undo" onclick="triggerUndoAction()" style="display:none;">↩️ Retour</button>
     <button class="btn-action" id="btn-advice" onclick="requestStrategicAdvice()">💡 Conseil</button>
   </div>
@@ -259,6 +266,32 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════
+// GESTION AUDIO DE LA MUSIQUE
+// ═══════════════════════════════════════════════════════
+const audioTrack = document.getElementById("bg-music");
+let isMuted = false;
+
+function startBackgroundMusic() {
+  audioTrack.volume = 0.4; // Ajuste le volume à 40% pour ne pas agresser les oreilles
+  audioTrack.play().catch(err => {
+    console.log("Lecture audio différée en attente d'action utilisateur complète.");
+  });
+}
+
+function toggleAudioMute() {
+  const btn = document.getElementById("btn-audio");
+  if (isMuted) {
+    audioTrack.muted = false;
+    btn.innerText = "🔊";
+    isMuted = false;
+  } else {
+    audioTrack.muted = true;
+    btn.innerText = "🔇";
+    isMuted = true;
+  }
+}
+
 // ═══════════════════════════════════════════════════════
 // LOGIQUE DE CHARGEMENT SÉCURISÉE SANS BLOCAGE
 // ═══════════════════════════════════════════════════════
@@ -281,7 +314,6 @@ function runFakeLoader() {
       currentStep++;
     } else {
       clearInterval(interval);
-      // Retrait via classe CSS native pour éliminer tout risque de freeze
       const loader = document.getElementById("screen-loading");
       loader.classList.add("fade-out");
       document.getElementById("screen-lobby").classList.add("active");
@@ -289,7 +321,6 @@ function runFakeLoader() {
   }, 350);
 }
 
-// Lancement automatique dès le chargement du document
 window.addEventListener('DOMContentLoaded', runFakeLoader);
 
 // ═══════════════════════════════════════════════════════
@@ -399,6 +430,9 @@ function initiateGameSession() {
   const name = document.getElementById("input-name").value.trim() || "Guerrier";
   undoHistory = []; recommendedMove = null;
   
+  // DÉMARRAGE DE LA MUSIQUE ICI (Sécurisé par le clic de l'utilisateur)
+  startBackgroundMusic();
+  
   if(gameMode === "local") {
     playerNames = { north: "Ancien du Village", south: name };
     G = createGame();
@@ -464,7 +498,7 @@ function triggerUndoAction() {
 function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); location.reload(); }
 
 // ═══════════════════════════════════════════════════════
-// MOTEUR GRAPHIOUE 3D STABILISÉ POUR MOBILE
+// MOTEUR GRAPHIQUE 3D STABILISÉ POUR MOBILE
 // ═══════════════════════════════════════════════════════
 let scene, camera, renderer, controls, pits3D = [], seedsGroup;
 let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
@@ -475,7 +509,6 @@ function initCore3DEngine() {
   container.innerHTML = ""; pits3D = [];
   scene = new THREE.Scene(); 
   
-  // Ambiance de brouillard ocre pour la savane au crépuscule
   scene.fog = new THREE.FogExp2(0x1d1108, 0.025);
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
