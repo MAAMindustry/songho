@@ -24,7 +24,7 @@
   box-sizing: border-box; 
   margin: 0; 
   padding: 0; 
-  touch-action: none; /* Laisse la main au moteur 3D pour éviter les conflits de défilement */
+  touch-action: none; 
   -webkit-tap-highlight-color: transparent; 
 }
 
@@ -35,16 +35,23 @@ body, html {
   -webkit-user-select: none; user-select: none;
 }
 
-/* ÉCRAN DE CHARGEMENT PRO ET CRÉATIF */
+/* ÉCRAN DE CHARGEMENT SÉCURISÉ (Transition CSS pure pour éviter les blocages) */
 #screen-loading {
   position: fixed; inset: 0; z-index: 999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: radial-gradient(circle at center, #1a1008 0%, #05070f 100%);
+  opacity: 1;
+  transition: opacity 0.5s ease-out, visibility 0.5s;
 }
+#screen-loading.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .loader-content {
   display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center;
 }
-/* Icône du jeu générée (Masque en SVG pur inline pour éviter les liens brisés) */
 .loader-icon {
   width: 90px; height: 90px;
   background: linear-gradient(135deg, #f59e0b, #b45309);
@@ -63,7 +70,7 @@ body, html {
 }
 .loader-bar-progress {
   width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-orange), var(--accent-gold));
-  border-radius: 10px; transition: width 0.1s ease-out;
+  border-radius: 10px; transition: width 0.3s ease-out;
 }
 .loader-status { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--text-muted); }
 
@@ -76,7 +83,6 @@ body, html {
 }
 .screen.active { display: flex; }
 
-/* Panneaux avec design inspiré des textures africaines et finitions dorées */
 .glass-panel {
   background: var(--panel-bg);
   border: 2px solid var(--glass-border);
@@ -85,7 +91,6 @@ body, html {
   box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.05);
   position: relative; overflow: hidden;
 }
-/* Décoration subtile en arrière-plan des cartes */
 .glass-panel::before {
   content: ""; position: absolute; inset: 0; opacity: 0.03; pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0h30v30H0zm30 30h30v30H30z' fill='%23fff'/%3E%3C/svg%3E");
@@ -104,7 +109,6 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
   background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff;
   padding: 14px 16px; border-radius: 12px; font-size: 1rem; outline: none; width: 100%; font-weight: 600;
 }
-.input-style:focus { border-color: var(--accent-gold); }
 
 .btn-premium {
   background: linear-gradient(135deg, var(--accent-gold), #d97706);
@@ -115,7 +119,6 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 
 #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; }
 
-/* HUD DE JEU MODERNISÉ */
 .hud-container {
   position: absolute; inset: 0; pointer-events: none; z-index: 10;
   display: flex; flex-direction: column; justify-content: space-between; padding: 14px;
@@ -125,7 +128,6 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
   background: rgba(14, 11, 22, 0.85); backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border); padding: 12px 18px; border-radius: 18px;
   display: flex; justify-content: space-between; align-items: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 .score-board { display: flex; gap: 20px; align-items: center; width: 100%; justify-content: space-between; }
 .score-card { display: flex; flex-direction: column; }
@@ -133,13 +135,11 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 .score-num.n { color: var(--accent-blue); }
 .score-num.s { color: var(--accent-orange); }
 
-/* BOUTONS ACTIONS TOUT EN BAS ADAPTÉS AUX POUCES */
 .hud-bottom-bar { display: flex; gap: 10px; width: 100%; pointer-events: auto; margin-bottom: 6px; }
 .btn-action {
   flex: 1; background: rgba(14, 11, 22, 0.88); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
   color: var(--text-primary); padding: 15px 8px; border-radius: 16px; font-weight: 800; font-size: 0.85rem;
   cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
 }
 .btn-action.leave { max-width: 65px; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
 
@@ -260,7 +260,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 
 <script>
 // ═══════════════════════════════════════════════════════
-// ANIMATION ET SIMULATION DE LA PAGE DE CHARGEMENT
+// LOGIQUE DE CHARGEMENT SÉCURISÉE SANS BLOCAGE
 // ═══════════════════════════════════════════════════════
 const steps = [
   { p: 25, t: "Sculpture du banc traditionnel..." },
@@ -281,27 +281,19 @@ function runFakeLoader() {
       currentStep++;
     } else {
       clearInterval(interval);
-      // Disparition en fondu de l'écran de chargement
-      new TWEEN.Tween({ opacity: 1 })
-        .to({ opacity: 0 }, 400)
-        .onUpdate((obj) => {
-          document.getElementById("screen-loading").style.opacity = obj.opacity;
-        })
-        .onComplete(() => {
-          document.getElementById("screen-loading").style.display = "none";
-          document.getElementById("screen-lobby").classList.add("active");
-        })
-        .start();
+      // Retrait via classe CSS native pour éliminer tout risque de freeze
+      const loader = document.getElementById("screen-loading");
+      loader.classList.add("fade-out");
+      document.getElementById("screen-lobby").classList.add("active");
     }
-  }, 450);
+  }, 350);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  runFakeLoader();
-});
+// Lancement automatique dès le chargement du document
+window.addEventListener('DOMContentLoaded', runFakeLoader);
 
 // ═══════════════════════════════════════════════════════
-// CODE REGLES DU JEU SONGO CONFORME AU MOTEUR [cite: 2]
+// MOTEUR ET RÈGLES DU JEU SONGO
 // ═══════════════════════════════════════════════════════
 const CYCLE = [
   {p:"north",i:0},{p:"north",i:1},{p:"north",i:2},{p:"north",i:3},{p:"north",i:4},{p:"north",i:5},{p:"north",i:6},
@@ -384,7 +376,7 @@ function playMove(s, p, i) {
 }
 
 // ═══════════════════════════════════════════════════════
-// RESEAU TUNNEL
+// ROUTAGE RÉSEAU MULTIJOUEUR
 // ═══════════════════════════════════════════════════════
 let gameMode = "local"; let onlineAction = "create";
 let G = null; let myRole = "south"; let roomCode = null; let ws = null;
@@ -472,7 +464,7 @@ function triggerUndoAction() {
 function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); location.reload(); }
 
 // ═══════════════════════════════════════════════════════
-// MOTEUR GRAPHIOUE 3D STABILISÉ AVEC ARRIÈRE-PLAN CULTUREL
+// MOTEUR GRAPHIOUE 3D STABILISÉ POUR MOBILE
 // ═══════════════════════════════════════════════════════
 let scene, camera, renderer, controls, pits3D = [], seedsGroup;
 let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
@@ -483,7 +475,7 @@ function initCore3DEngine() {
   container.innerHTML = ""; pits3D = [];
   scene = new THREE.Scene(); 
   
-  // Brouillard coloré chaud assorti à un coucher de soleil de savane (Teinte ocre/cuivre)
+  // Ambiance de brouillard ocre pour la savane au crépuscule
   scene.fog = new THREE.FogExp2(0x1d1108, 0.025);
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -495,10 +487,9 @@ function initCore3DEngine() {
     camera.position.set(0, 11, 11.5);
   }
 
-  // Rendu avec alpha transparent pour fusionner parfaitement avec le fond d'écran
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Protège la batterie Android d'une surchauffe
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
@@ -510,18 +501,16 @@ function initCore3DEngine() {
   controls.maxPolarAngle = Math.PI / 2.2;
   controls.minDistance = 5; 
   controls.maxDistance = 20;
-  controls.enablePan = false; // Maintient le plateau centré lors des gestes maladroits
+  controls.enablePan = false;
 
   if(isMobile) {
     controls.rotateSpeed = 0.45;
   }
 
-  // Éclairage chaud imitant la lumière dorée d'un feu ou d'un coucher de soleil
   const ambientLight = new THREE.AmbientLight(0x3a2518, 1.5); scene.add(ambientLight);
   const sunLight = new THREE.DirectionalLight(0xffaa44, 1.4); sunLight.position.set(3, 10, 2); scene.add(sunLight);
   const skyLight = new THREE.DirectionalLight(0x6688cc, 0.4); skyLight.position.set(-3, 8, -2); scene.add(skyLight);
 
-  // Le Banc en Bois Traditionnel sculpté
   const benchGroup = new THREE.Group();
   const woodMaterial = new THREE.MeshStandardMaterial({ 
     color: 0x3d2011, roughness: 0.35, metalness: 0.05,
@@ -535,11 +524,9 @@ function initCore3DEngine() {
 
   seedsGroup = new THREE.Group(); scene.add(seedsGroup);
 
-  // Génération des 14 cavités sacrées
   for(let i=0; i<7; i++) createPremiumPit("north", i, -5.25 + (i * 1.75), -1.1);
   for(let i=0; i<7; i++) createPremiumPit("south", i, -5.25 + (i * 1.75), 1.1);
 
-  // Événements tactiles Android sécurisés
   window.addEventListener('pointerdown', () => { pointerStartTime = Date.now(); });
   window.addEventListener('pointerup', handleAndroidTouchClick);
   window.addEventListener('resize', handleResize);
@@ -548,7 +535,6 @@ function initCore3DEngine() {
 }
 
 function createPremiumPit(player, idx, x, z) {
-  // Rayon large de 0.78 pour une tolérance tactile optimale au doigt
   const pitGeo = new THREE.CylinderGeometry(0.78, 0.62, 0.12, 20);
   const pitMat = new THREE.MeshStandardMaterial({ 
     color: 0x170e08, roughness: 0.5,
@@ -589,7 +575,6 @@ function syncLogicTo3DVisuals() {
   while(seedsGroup.children.length > 0) { seedsGroup.remove(seedsGroup.children[0]); }
 
   const gemGeo = new THREE.DodecahedronGeometry(0.12);
-  // Matériaux type Bronze poli et Ambre/Or pour coller à la charte graphique
   const copperMat = new THREE.MeshStandardMaterial({ color: 0xcd7f32, roughness: 0.2, metalness: 0.3 });
   const goldMat = new THREE.MeshStandardMaterial({ color: 0xffb703, roughness: 0.1, metalness: 0.4 });
   const legals = getLegalMoves(G);
@@ -608,7 +593,6 @@ function syncLogicTo3DVisuals() {
       ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.12; ringMesh.scale.setScalar(1.0);
     }
 
-    // Empilement stable
     for(let k=0; k<count; k++) {
       const gemMesh = new THREE.Mesh(gemGeo, k % 2 === 0 ? copperMat : goldMat);
       const angle = k * 1.25; const radius = Math.min(0.35, 0.06 * k);
@@ -622,7 +606,6 @@ function handleAndroidTouchClick(e) {
   if(!G || G.status !== "playing") return;
   if(gameMode === "online" && G.currentPlayer !== myRole) return;
 
-  // Filtre les glissements de caméra (si appui > 220ms, action ignorée)
   if (Date.now() - pointerStartTime > 220) return;
 
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
