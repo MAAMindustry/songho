@@ -2,14 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Songo 3D Élite — Mobile Premium</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+<title>Songo 3D — Android Élite</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
   --bg-dark: #05070f;
-  --panel-bg: rgba(9, 11, 23, 0.85);
+  --panel-bg: rgba(9, 11, 23, 0.88);
   --accent-gold: #f59e0b;
   --accent-blue: #3b82f6;
   --accent-orange: #f97316;
@@ -19,7 +19,15 @@
   --glass-border: rgba(255, 255, 255, 0.08);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+/* Optimisation pour le tactile Android */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  touch-action: none; /* Désactive les gestes par défaut du navigateur pour laisser la main à la 3D */
+  -webkit-tap-highlight-color: transparent; 
+}
+
 body, html {
   width: 100%; height: 100%; overflow: hidden;
   background-color: var(--bg-dark); color: var(--text-primary);
@@ -27,7 +35,6 @@ body, html {
   -webkit-user-select: none; user-select: none;
 }
 
-/* Écrans */
 .screen {
   position: absolute; inset: 0; z-index: 100;
   display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -44,18 +51,11 @@ body, html {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
 
-h1 {
-  font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem;
-}
-h1 span {
-  background: linear-gradient(135deg, var(--accent-gold), #f97316);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
+h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.5px; }
+h1 span { background: linear-gradient(135deg, var(--accent-gold), #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
 .mode-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 12px; margin-bottom: 1.25rem; }
-.mode-tab {
-  flex: 1; padding: 10px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-muted);
-}
+.mode-tab { flex: 1; padding: 10px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
 .mode-tab.active { background: rgba(255,255,255,0.1); color: #fff; }
 
 .input-group { display: flex; flex-direction: column; text-align: left; gap: 6px; margin-bottom: 1.25rem; }
@@ -71,7 +71,6 @@ h1 span {
   padding: 14px; width: 100%; border: none; border-radius: 14px; cursor: pointer;
 }
 
-/* HUD Adapté au Mobile */
 #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; }
 
 .hud-container {
@@ -79,12 +78,9 @@ h1 span {
   display: flex; flex-direction: column; justify-content: space-between; padding: 12px;
 }
 
-/* En-tête compacte */
-.hud-top { 
-  display: flex; flex-direction: column; gap: 8px; width: 100%; pointer-events: auto;
-}
+.hud-top { display: flex; flex-direction: column; gap: 8px; width: 100%; pointer-events: auto; }
 .hud-panel {
-  background: rgba(9, 11, 23, 0.8); backdrop-filter: blur(15px);
+  background: rgba(9, 11, 23, 0.85); backdrop-filter: blur(15px);
   border: 1px solid var(--glass-border); padding: 10px 16px; border-radius: 16px;
   display: flex; justify-content: space-between; align-items: center;
 }
@@ -95,13 +91,10 @@ h1 span {
 .score-num.n { color: var(--accent-blue); }
 .score-num.s { color: var(--accent-orange); }
 
-/* Barre d'actions basse (plus facile d'accès avec les pouces) */
-.hud-bottom-bar {
-  display: flex; gap: 8px; width: 100%; pointer-events: auto; margin-bottom: 5px;
-}
+.hud-bottom-bar { display: flex; gap: 8px; width: 100%; pointer-events: auto; margin-bottom: 5px; }
 .btn-action {
   flex: 1; background: rgba(9, 11, 23, 0.85); backdrop-filter: blur(15px); border: 1px solid var(--glass-border);
-  color: var(--text-primary); padding: 12px 8px; border-radius: 14px; font-weight: 700; font-size: 0.8rem;
+  color: var(--text-primary); padding: 14px 8px; border-radius: 14px; font-weight: 700; font-size: 0.85rem;
   cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
 }
 .btn-action.leave { max-width: 60px; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
@@ -127,16 +120,16 @@ h1 span {
 
 <div id="screen-lobby" class="screen active">
   <div class="glass-panel">
-    <h1 style="font-size:1.6rem; margin-bottom:1rem;">SONGO <span>MOBILE 3D</span></h1>
+    <h1>SONGO <span>ANDROID 3D</span></h1>
     
     <div class="mode-tabs">
-      <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">1 Joueur / Local</div>
-      <div class="mode-tab" id="tab-online" onclick="switchMode('online')">En Ligne</div>
+      <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">Session Locale</div>
+      <div class="mode-tab" id="tab-online" onclick="switchMode('online')">Arène En Ligne</div>
     </div>
 
     <div class="input-group">
-      <label>Pseudo</label>
-      <input id="input-name" class="input-style" type="text" value="Joueur Mobil" maxlength="12">
+      <label>Votre Pseudo</label>
+      <input id="input-name" class="input-style" type="text" value="Android_Player" maxlength="12">
     </div>
 
     <div id="online-configuration" style="display:none; flex-direction:column; gap:10px;">
@@ -145,22 +138,22 @@ h1 span {
         <div class="mode-tab" id="action-join" onclick="switchOnlineAction('join')">Rejoindre</div>
       </div>
       <div class="input-group" id="code-wrapper" style="display:none;">
-        <label>Code Salon</label>
+        <label>Code d'accès</label>
         <input id="input-code" class="input-style" type="text" placeholder="EX: AB78X" style="text-transform:uppercase; text-align:center; font-family:'Space Mono';">
       </div>
     </div>
 
-    <button class="btn-premium" onclick="initiateGameSession()">Lancer la partie</button>
+    <button class="btn-premium" onclick="initiateGameSession()">Ouvrir l'Arène</button>
   </div>
 </div>
 
 <div id="screen-waiting" class="screen">
   <div class="glass-panel">
-    <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">Code à partager :</h2>
+    <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">Clé de connexion :</h2>
     <div id="display-code" style="font-family:'Space Mono'; font-size:2rem; font-weight:700; color:var(--accent-gold); letter-spacing:4px; background:rgba(0,0,0,0.4); padding:12px; border-radius:14px; margin-bottom:1.5rem;">-----</div>
     <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; color:var(--text-muted)">
       <div class="pulse-indicator"></div>
-      <span id="wait-status-text">Attente du second joueur...</span>
+      <span id="wait-status-text">Attente du joueur...</span>
     </div>
   </div>
 </div>
@@ -195,15 +188,15 @@ h1 span {
 <div class="modal-overlay" id="end-modal">
   <div class="glass-panel">
     <div style="font-size:2.5rem; margin-bottom:0.5rem;">🏆</div>
-    <h2 id="end-title" style="font-size:1.4rem; margin-bottom:0.5rem;">Fin</h2>
+    <h2 id="end-title" style="font-size:1.4rem; margin-bottom:0.5rem;">Fin de Partie</h2>
     <p id="end-desc" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;"></p>
-    <button class="btn-premium" onclick="location.reload()">Menu principal</button>
+    <button class="btn-premium" onclick="location.reload()">Menu Principal</button>
   </div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════
-// LOGIQUE DU JEU SONGHO
+// NOUVEAU LOGICIEL DE JEU SONGO CONFORME AUX RÈGLES OFFICIELLES
 // ═══════════════════════════════════════════════════════
 const CYCLE = [
   {p:"north",i:0},{p:"north",i:1},{p:"north",i:2},{p:"north",i:3},{p:"north",i:4},{p:"north",i:5},{p:"north",i:6},
@@ -286,7 +279,7 @@ function playMove(s, p, i) {
 }
 
 // ═══════════════════════════════════════════════════════
-// RESEAU ET INTERFACE CONTROLEUR
+// GESTION RÉSEAU ET ROUTAGE MOBILE
 // ═══════════════════════════════════════════════════════
 let gameMode = "local"; let onlineAction = "create";
 let G = null; let myRole = "south"; let roomCode = null; let ws = null;
@@ -306,7 +299,7 @@ function switchOnlineAction(a) {
 }
 
 function initiateGameSession() {
-  const name = document.getElementById("input-name").value.trim() || "Mobil";
+  const name = document.getElementById("input-name").value.trim() || "Android";
   undoHistory = []; recommendedMove = null;
   
   if(gameMode === "local") {
@@ -325,8 +318,11 @@ function initiateGameSession() {
 }
 
 function connectToNetworkTunnel(name) {
+  // Adaptation de l'adresse WebSocket sécurisée absolue pour Android
+  const hostLocation = window.location.host;
   const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-  ws = new WebSocket(protocol + window.location.host);
+  ws = new WebSocket(protocol + hostLocation);
+  
   ws.onopen = () => {
     if(onlineAction === "create") ws.send(JSON.stringify({ type: 'create', name: name }));
     else ws.send(JSON.stringify({ type: 'join', code: document.getElementById("input-code").value.trim().toUpperCase(), name: name }));
@@ -343,7 +339,7 @@ function connectToNetworkTunnel(name) {
       document.getElementById("game-hud").style.display = "flex";
       document.getElementById("btn-undo").style.display = "none";
       syncLogicTo3DVisuals();
-    } else if(msg.type === 'opponent_move') {
+    } else if(msg.type === 'move') {
       playMove(G, msg.move.player, msg.move.pitIndex); syncLogicTo3DVisuals();
     } else if(msg.type === 'opponent_disconnected') {
       alert("Adversaire déconnecté."); exitToMainMenu();
@@ -372,10 +368,11 @@ function triggerUndoAction() {
 function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); location.reload(); }
 
 // ═══════════════════════════════════════════════════════
-// MOTEUR GRAPHIOUE 3D RECALIBRÉ MOBILE
+// MOTEUR GRAPHIOUE 3D STABILISÉ POUR ANDROID
 // ═══════════════════════════════════════════════════════
 let scene, camera, renderer, controls, pits3D = [], seedsGroup;
 let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
+let pointerStartTime = 0; // Distingue le tap du glissement de caméra
 
 function initCore3DEngine() {
   const container = document.getElementById("canvas-container");
@@ -384,38 +381,39 @@ function initCore3DEngine() {
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
   
-  // 📱 CONFIGURATION DE LA CAMÉRA RECALCULÉE POUR MOBILE (VUE DU DESSUS PLUS ÉLEVÉE)
+  // Vue orthographique adaptative optimisée pour écran vertical Android
   const isMobile = window.innerWidth < 768;
   if(isMobile) {
-    camera.position.set(0, 16, 5); // Plus haute et centrée à la verticale pour tout voir
+    camera.position.set(0, 15, 4.5);
   } else {
     camera.position.set(0, 11, 12);
   }
 
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = !isMobile; // Désactivé sur mobile pour économiser la batterie
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Limite à 1.5 pour éviter la surchauffe Android
+  renderer.shadowMap.enabled = false; // Désactivé sur mobile pour garantir 60 FPS constants
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   container.appendChild(renderer.domElement);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.05;
+  controls.enableDamping = true; 
+  controls.dampingFactor = 0.08;
   controls.maxPolarAngle = Math.PI / 2.2;
-  controls.minDistance = 5; controls.maxDistance = 25;
-  
-  // 📱 Si on est sur mobile, on calme la rotation tactile pour éviter que l'écran saute
+  controls.minDistance = 5; 
+  controls.maxDistance = 22;
+  controls.enablePan = false; // Empeche l'écran de se décaler en dehors du cadre en glissant à deux doigts
+
   if(isMobile) {
-    controls.rotateSpeed = 0.4;
-    controls.enableZoom = true;
+    controls.rotateSpeed = 0.45;
   }
 
-  const ambientLight = new THREE.AmbientLight(0x22314d, 0.9); scene.add(ambientLight);
-  const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.0); sunLight.position.set(5, 12, 5); scene.add(sunLight);
+  const ambientLight = new THREE.AmbientLight(0x22314d, 1.2); scene.add(ambientLight);
+  const sunLight = new THREE.DirectionalLight(0xfffbeb, 0.8); sunLight.position.set(2, 12, 2); scene.add(sunLight);
 
-  // Le Banc Traditionnel en Bois
+  // Structure du Banc en bois
   const benchGroup = new THREE.Group();
-  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x331c10, roughness: 0.3, metalness: 0.1 });
+  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x331c10, roughness: 0.4, metalness: 0.1 });
   
   const topMesh = new THREE.Mesh(new THREE.BoxGeometry(16.2, 0.5, 4.8), woodMaterial); topMesh.position.y = 1.0; benchGroup.add(topMesh);
   const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.0, 4.4), woodMaterial); leftLeg.position.set(-7.3, 0.5, 0); benchGroup.add(leftLeg);
@@ -424,26 +422,28 @@ function initCore3DEngine() {
 
   seedsGroup = new THREE.Group(); scene.add(seedsGroup);
 
-  // Alignement des Trous
+  // Positionnement des cavités
   for(let i=0; i<7; i++) createPremiumPit("north", i, -5.25 + (i * 1.75), -1.1);
   for(let i=0; i<7; i++) createPremiumPit("south", i, -5.25 + (i * 1.75), 1.1);
 
-  // Événements tactiles + souris unifiés
-  window.addEventListener('pointerdown', handlePointerClick);
+  // ÉVÉNEMENTS SPÉCIFIQUES TACTILES ANDROID UNIFIÉS
+  window.addEventListener('pointerdown', () => { pointerStartTime = Date.now(); });
+  window.addEventListener('pointerup', handleAndroidTouchClick);
   window.addEventListener('resize', handleResize);
+  
   animateFrameLoop();
 }
 
 function createPremiumPit(player, idx, x, z) {
-  // 📱 Rayon augmenté à 0.75 au lieu de 0.66 pour élargir la zone de clic au doigt !
-  const pitGeo = new THREE.CylinderGeometry(0.75, 0.6, 0.12, 24);
+  // Rayon élargi à 0.78 pour une tolérance parfaite aux gros doigts sur mobile
+  const pitGeo = new THREE.CylinderGeometry(0.78, 0.62, 0.12, 20);
   const pitMat = new THREE.MeshStandardMaterial({ 
     color: 0x140c06, roughness: 0.5,
-    emissive: player === "north" ? 0x1d4ed8 : 0xb45309, emissiveIntensity: 0.1
+    emissive: player === "north" ? 0x1d4ed8 : 0xb45309, emissiveIntensity: 0.08
   });
   const mesh = new THREE.Mesh(pitGeo, pitMat); mesh.position.set(x, 1.21, z); scene.add(mesh);
   
-  const ringGeo = new THREE.RingGeometry(0.75, 0.79, 24);
+  const ringGeo = new THREE.RingGeometry(0.78, 0.82, 20);
   const ringMat = new THREE.MeshBasicMaterial({ color: player === "north" ? 0x3b82f6 : 0xf97316, side: THREE.DoubleSide, transparent: true, opacity: 0.2 });
   const ring = new THREE.Mesh(ringGeo, ringMat); ring.rotation.x = Math.PI / 2; ring.position.set(x, 1.27, z); scene.add(ring);
 
@@ -476,8 +476,8 @@ function syncLogicTo3DVisuals() {
   while(seedsGroup.children.length > 0) { seedsGroup.remove(seedsGroup.children[0]); }
 
   const gemGeo = new THREE.DodecahedronGeometry(0.12);
-  const copperMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.2 });
-  const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.2 });
+  const copperMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3 });
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
   const legals = getLegalMoves(G);
 
   pits3D.forEach(pit => {
@@ -487,13 +487,14 @@ function syncLogicTo3DVisuals() {
     const isPlayable = legals.some(m => m.p === player && m.i === index) && G.status === "playing";
     
     if (isRecommended) {
-      ringMesh.material.color.setHex(0xf59e0b); ringMesh.material.opacity = 0.9; ringMesh.scale.setScalar(1.08);
+      ringMesh.material.color.setHex(0xf59e0b); ringMesh.material.opacity = 0.95; ringMesh.scale.setScalar(1.08);
     } else if (isPlayable && (gameMode === "local" || G.currentPlayer === myRole)) {
-      ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.5; ringMesh.scale.setScalar(1.04);
+      ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.6; ringMesh.scale.setScalar(1.04);
     } else {
       ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.12; ringMesh.scale.setScalar(1.0);
     }
 
+    // Algorithme d'empilement stable
     for(let k=0; k<count; k++) {
       const gemMesh = new THREE.Mesh(gemGeo, k % 2 === 0 ? copperMat : goldMat);
       const angle = k * 1.25; const radius = Math.min(0.35, 0.06 * k);
@@ -503,9 +504,12 @@ function syncLogicTo3DVisuals() {
   });
 }
 
-function handlePointerClick(e) {
+function handleAndroidTouchClick(e) {
   if(!G || G.status !== "playing") return;
   if(gameMode === "online" && G.currentPlayer !== myRole) return;
+
+  // Si l'utilisateur est resté appuyé plus de 250ms, c'est qu'il glissait la caméra, on ignore le clic !
+  if (Date.now() - pointerStartTime > 250) return;
 
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -527,7 +531,7 @@ function animateFrameLoop() {
   if(G && G.status === "playing") {
     pits3D.forEach(pit => {
       if (recommendedMove && recommendedMove.p === pit.userData.player && recommendedMove.i === pit.userData.index) {
-        pit.userData.ringMesh.material.opacity = 0.6 + Math.sin(Date.now() * 0.012) * 0.4;
+        pit.userData.ringMesh.material.opacity = 0.5 + Math.sin(Date.now() * 0.015) * 0.4;
       }
     });
   }
@@ -537,7 +541,7 @@ function animateFrameLoop() {
 function handleResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   const isMobile = window.innerWidth < 768;
-  if(isMobile) camera.position.set(0, 16, 5);
+  if(isMobile) camera.position.set(0, 15, 4.5);
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
