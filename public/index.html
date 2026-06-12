@@ -395,7 +395,7 @@ function playMove(s, p, i) {
 }
 
 // ═══════════════════════════════════════════════════════
-// ROUTAGE RÉSEAU MULTIJOUEUR
+// ROUTAGE RÉSEAU MULTIJOUEUR (CONNECTÉ)
 // ═══════════════════════════════════════════════════════
 let gameMode = "local"; let onlineAction = "create";
 let G = null; let myRole = "south"; let roomCode = null; let ws = null;
@@ -435,35 +435,60 @@ function initiateGameSession() {
 }
 
 function connectToNetworkTunnel(name) {
-  // CONFIGURATION DU TUNNEL RÉSEAU MULTIJOUEUR
-  const hostLocation = "songo-websocket-server.onrender.com"; // Remplacer par ton vrai sous-domaine Render
+  // ADRESSE DU SERVEUR DE JEU RENDER EN PROD
+  const hostLocation = "songo-websocket-server.onrender.com"; 
   const protocol = 'wss://'; 
   
   ws = new WebSocket(protocol + hostLocation);
   
   ws.onopen = () => {
-    if(onlineAction === "create") ws.send(JSON.stringify({ type: 'create', name: name }));
-    else ws.send(JSON.stringify({ type: 'join', code: document.getElementById("input-code").value.trim().toUpperCase(), name: name }));
+    if(onlineAction === "create") {
+      ws.send(JSON.stringify({ type: 'create', name: name }));
+    } else {
+      const codeInput = document.getElementById("input-code").value.trim().toUpperCase();
+      ws.send(JSON.stringify({ type: 'join', code: codeInput, name: name }));
+    }
   };
+
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
+    
     if(msg.type === 'room_created') {
-      roomCode = msg.code; myRole = "south"; document.getElementById("display-code").innerText = msg.code;
-    } else if(msg.type === 'room_joined') {
-      roomCode = msg.code; myRole = "north";
-    } else if(msg.type === 'game_start') {
-      playerNames = msg.players; G = createGame(); initCore3DEngine();
+      roomCode = msg.code; 
+      myRole = "south"; 
+      document.getElementById("display-code").innerText = msg.code;
+    } 
+    else if(msg.type === 'room_joined') {
+      roomCode = msg.code; 
+      myRole = "north";
+    } 
+    else if(msg.type === 'game_start') {
+      playerNames = msg.players; 
+      G = createGame(); 
+      initCore3DEngine();
       document.getElementById("screen-waiting").classList.remove("active");
       document.getElementById("game-hud").style.display = "flex";
-      document.getElementById("btn-undo").style.display = "none";
+      document.getElementById("btn-undo").style.display = "none"; // Désactivé en ligne pour équité
       syncLogicTo3DVisuals();
-    } else if(msg.type === 'move') {
-      playMove(G, msg.move.player, msg.move.pitIndex); syncLogicTo3DVisuals();
-    } else if(msg.type === 'opponent_disconnected') {
-      alert("L'adversaire a fui le combat."); exitToMainMenu();
-    } else if(msg.type === 'error') {
-      alert(msg.message); location.reload();
+    } 
+    else if(msg.type === 'move') {
+      playMove(G, msg.move.player, msg.move.pitIndex); 
+      syncLogicTo3DVisuals();
+    } 
+    else if(msg.type === 'opponent_disconnected') {
+      alert("L'adversaire a fui le combat."); 
+      exitToMainMenu();
+    } 
+    else if(msg.type === 'error') {
+      alert(msg.message); 
+      location.reload();
     }
+  };
+
+  ws.onerror = (err) => {
+    console.error("Erreur Réseau WebSocket:", err);
+    alert("Impossible de joindre le serveur. Vérifie ton déploiement Render.");
+    exitToMainMenu();
   };
 }
 
@@ -481,7 +506,11 @@ function requestStrategicAdvice() {
 }
 
 function triggerUndoAction() {
-  if (undoHistory.length > 0 && G && G.status === "playing") { G = undoHistory.pop(); recommendedMove = null; syncLogicTo3DVisuals(); }
+  if (undoHistory.length > 0 && G && G.status === "playing" && gameMode === "local") { 
+    G = undoHistory.pop(); 
+    recommendedMove = null; 
+    syncLogicTo3DVisuals(); 
+  }
 }
 function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); location.reload(); }
 
@@ -497,7 +526,6 @@ function initCore3DEngine() {
   container.innerHTML = ""; pits3D = [];
   scene = new THREE.Scene(); 
   
-  // Ambiance de brouillard ocre très immersive (effet coucher de soleil)
   scene.fog = new THREE.FogExp2(0x0a0502, 0.035);
 
   camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -507,8 +535,8 @@ function initCore3DEngine() {
 
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: false });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limite à 2x pour préserver la batterie mobile
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; // Rendu de couleur ultra-réaliste typé cinéma
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.25;
   container.appendChild(renderer.domElement);
 
@@ -521,12 +549,10 @@ function initCore3DEngine() {
   controls.enablePan = false;
   if(isMobile) controls.rotateSpeed = 0.5;
 
-  // SCHÉMA LUMINEUX COMPLEXE TYPE STUDIO DE JEUX
   const ambientLight = new THREE.AmbientLight(0x1a111e, 1.2); scene.add(ambientLight);
   const sunLight = new THREE.DirectionalLight(0xffa64d, 1.8); sunLight.position.set(6, 12, 4); scene.add(sunLight);
   const rimLight = new THREE.DirectionalLight(0x5ca7ff, 0.6); rimLight.position.set(-6, 8, -4); scene.add(rimLight);
 
-  // CRÉATION DU BANC AVEC TEXTURE DE BOIS PBR ÉLITE
   const benchGroup = new THREE.Group();
   const woodMaterial = new THREE.MeshStandardMaterial({ 
     color: 0x22120b, roughness: 0.45, metalness: 0.1,
@@ -551,14 +577,12 @@ function initCore3DEngine() {
 }
 
 function createPremiumPit(player, idx, x, z) {
-  // Cavités creuses sculptées avec bordures adoucies
   const pitGeo = new THREE.CylinderGeometry(0.76, 0.60, 0.15, 24);
   const pitMat = new THREE.MeshStandardMaterial({ 
     color: 0x0f0704, roughness: 0.6, metalness: 0.2
   });
   const mesh = new THREE.Mesh(pitGeo, pitMat); mesh.position.set(x, 1.20, z); scene.add(mesh);
   
-  // Anneau de sélection lumineux futuriste/néon au sol
   const ringGeo = new THREE.RingGeometry(0.76, 0.81, 30);
   const ringMat = new THREE.MeshBasicMaterial({ 
     color: player === "north" ? 0x60a5fa : 0xf97316, 
@@ -588,17 +612,17 @@ function syncLogicTo3DVisuals() {
     document.getElementById("end-desc").innerText = `SCORE FINAL — ${G.scores.north} VS ${G.scores.south}`;
     document.getElementById("end-modal").classList.add("active");
   } else {
-    label.innerText = G.currentPlayer === "south" ? "Tour : Sud" : "Tour : Nord";
+    if(gameMode === "online") {
+      label.innerText = G.currentPlayer === myRole ? "À ton tour !" : "L'adversaire réfléchit...";
+    } else {
+      label.innerText = G.currentPlayer === "south" ? "Tour : Sud" : "Tour : Nord";
+    }
     glow.style.backgroundColor = G.currentPlayer === "south" ? "var(--accent-orange)" : "var(--accent-blue)";
   }
 
-  // Nettoyage complet des anciennes graines 3D
   while(seedsGroup.children.length > 0) { seedsGroup.remove(seedsGroup.children[0]); }
 
-  // Géométrie sous forme de cristal/gemme facettée très pro
   const gemGeo = new THREE.DodecahedronGeometry(0.12);
-  
-  // Matériaux physiques brillants (Cristal d'Or et de Jaspe Rouge)
   const copperMat = new THREE.MeshStandardMaterial({ color: 0x9a2212, roughness: 0.15, metalness: 0.1, emissive: 0x220502 });
   const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.05, metalness: 0.8, emissive: 0x442200 });
   const legals = getLegalMoves(G);
@@ -609,7 +633,6 @@ function syncLogicTo3DVisuals() {
     const isRecommended = recommendedMove && recommendedMove.p === player && recommendedMove.i === index;
     const isPlayable = legals.some(m => m.p === player && m.i === index) && G.status === "playing";
     
-    // Design et animation des halos de sélection
     if (isRecommended) {
       ringMesh.material.color.setHex(0xfbbf24); ringMesh.material.opacity = 1.0; ringMesh.scale.setScalar(1.06);
     } else if (isPlayable && (gameMode === "local" || G.currentPlayer === myRole)) {
@@ -618,7 +641,6 @@ function syncLogicTo3DVisuals() {
       ringMesh.material.color.setHex(player === "north" ? 0x60a5fa : 0xf97316); ringMesh.material.opacity = 0.05; ringMesh.scale.setScalar(1.0);
     }
 
-    // Répartition naturelle et géométrique des cristaux dans les trous
     for(let k=0; k<count; k++) {
       const gemMesh = new THREE.Mesh(gemGeo, k % 3 === 0 ? copperMat : goldMat);
       const angle = k * 1.40; const radius = Math.min(0.34, 0.055 * k);
@@ -626,11 +648,10 @@ function syncLogicTo3DVisuals() {
       
       gemMesh.position.set(
         pit.position.x + Math.cos(angle) * radius,
-        targetY + 2.0, // On les fait apparaître un peu plus haut pour l'effet de chute
+        targetY + 2.0,
         pit.position.z + Math.sin(angle) * radius
       );
       
-      // Petite animation d'apparition / chute de graine très pro
       new TWEEN.Tween(gemMesh.position).to({ y: targetY }, 350 + (k*15)).easing(TWEEN.Easing.Bounce.Out).start();
       gemMesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
       seedsGroup.add(gemMesh);
@@ -640,8 +661,8 @@ function syncLogicTo3DVisuals() {
 
 function handleAndroidTouchClick(e) {
   if(!G || G.status !== "playing") return;
-  if(gameMode === "online" && G.currentPlayer !== myRole) return;
-  if (Date.now() - pointerStartTime > 200) return; // Évite les faux clics lors d'une rotation de caméra
+  if(gameMode === "online" && G.currentPlayer !== myRole) return; // Bloque le clic si ce n'est pas son tour en ligne
+  if (Date.now() - pointerStartTime > 200) return;
 
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -651,10 +672,14 @@ function handleAndroidTouchClick(e) {
   if(intersects.length > 0) {
     const { player, index } = intersects[0].object.userData;
     if(player === G.currentPlayer && getLegalMoves(G).some(m => m.p === player && m.i === index)) {
-      // Animation physique d'impact de la case cliquée (Effet ressort)
       new TWEEN.Tween(intersects[0].object.position).to({ y: 1.12 }, 70).easing(TWEEN.Easing.Quadratic.Out).yoyo(true).repeat(1).to({ y: 1.20 }, 70).start();
-      playMove(G, player, index); syncLogicTo3DVisuals();
-      if(gameMode === "online" && ws) ws.send(JSON.stringify({ type: 'move', code: roomCode, move: { player, pitIndex: index } }));
+      
+      playMove(G, player, index); 
+      syncLogicTo3DVisuals();
+      
+      if(gameMode === "online" && ws) {
+        ws.send(JSON.stringify({ type: 'move', code: roomCode, move: { player, pitIndex: index } }));
+      }
     }
   }
 }
@@ -662,7 +687,6 @@ function handleAndroidTouchClick(e) {
 function animateFrameLoop() {
   requestAnimationFrame(animateFrameLoop); TWEEN.update(); controls.update();
   
-  // Animation temporelle continue : Pulsation des néons au sol pour attirer l'œil
   if(G && G.status === "playing") {
     const time = Date.now() * 0.004;
     pits3D.forEach(pit => {
