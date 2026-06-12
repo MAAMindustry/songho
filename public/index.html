@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-<title>Songo 3D — Android Élite</title>
+<title>Songo 3D — Édition Élite Africaine</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
   --bg-dark: #05070f;
-  --panel-bg: rgba(9, 11, 23, 0.88);
+  --panel-bg: rgba(14, 11, 22, 0.82);
   --accent-gold: #f59e0b;
   --accent-blue: #3b82f6;
   --accent-orange: #f97316;
   --accent-red: #ef4444;
   --text-primary: #f8fafc;
   --text-muted: #94a3b8;
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(245, 158, 11, 0.15);
 }
 
-/* Optimisation pour le tactile Android */
+/* Optimisation pour le tactile Android/iOS */
 * { 
   box-sizing: border-box; 
   margin: 0; 
   padding: 0; 
-  touch-action: none; /* Désactive les gestes par défaut du navigateur pour laisser la main à la 3D */
+  touch-action: none; /* Laisse la main au moteur 3D pour éviter les conflits de défilement */
   -webkit-tap-highlight-color: transparent; 
 }
 
@@ -35,76 +35,120 @@ body, html {
   -webkit-user-select: none; user-select: none;
 }
 
+/* ÉCRAN DE CHARGEMENT PRO ET CRÉATIF */
+#screen-loading {
+  position: fixed; inset: 0; z-index: 999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(circle at center, #1a1008 0%, #05070f 100%);
+}
+.loader-content {
+  display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center;
+}
+/* Icône du jeu générée (Masque en SVG pur inline pour éviter les liens brisés) */
+.loader-icon {
+  width: 90px; height: 90px;
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  border-radius: 24px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+  animation: pulseLogo 2s infinite ease-in-out;
+}
+@keyframes pulseLogo { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+.loader-title {
+  font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #fff;
+}
+.loader-title span { color: var(--accent-gold); }
+.loader-bar-container {
+  width: 220px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; position: relative;
+}
+.loader-bar-progress {
+  width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-orange), var(--accent-gold));
+  border-radius: 10px; transition: width 0.1s ease-out;
+}
+.loader-status { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--text-muted); }
+
+/* Écrans de menu */
 .screen {
   position: absolute; inset: 0; z-index: 100;
   display: none; flex-direction: column; align-items: center; justify-content: center;
-  background: radial-gradient(circle at center, rgba(5,7,15,0.6) 0%, rgba(5,7,15,0.99) 100%);
-  backdrop-filter: blur(20px); padding: 15px;
+  background: radial-gradient(circle at center, rgba(5,7,15,0.5) 0%, rgba(5,7,15,0.92) 100%);
+  backdrop-filter: blur(12px); padding: 15px;
 }
 .screen.active { display: flex; }
 
+/* Panneaux avec design inspiré des textures africaines et finitions dorées */
 .glass-panel {
   background: var(--panel-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px; padding: 2rem 1.5rem;
-  width: 100%; max-width: 400px; text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--glass-border);
+  border-radius: 28px; padding: 2.2rem 1.8rem;
+  width: 100%; max-width: 390px; text-align: center;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative; overflow: hidden;
+}
+/* Décoration subtile en arrière-plan des cartes */
+.glass-panel::before {
+  content: ""; position: absolute; inset: 0; opacity: 0.03; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0h30v30H0zm30 30h30v30H30z' fill='%23fff'/%3E%3C/svg%3E");
 }
 
-h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.5px; }
-h1 span { background: linear-gradient(135deg, var(--accent-gold), #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.5px; }
+h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-.mode-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 12px; margin-bottom: 1.25rem; }
-.mode-tab { flex: 1; padding: 10px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
-.mode-tab.active { background: rgba(255,255,255,0.1); color: #fff; }
+.mode-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 14px; margin-bottom: 1.25rem; border: 1px solid rgba(255,255,255,0.05); }
+.mode-tab { flex: 1; padding: 11px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.8rem; color: var(--text-muted); transition: all 0.2s; }
+.mode-tab.active { background: rgba(245, 158, 11, 0.15); color: var(--accent-gold); border: 1px solid rgba(245, 158, 11, 0.25); }
 
 .input-group { display: flex; flex-direction: column; text-align: left; gap: 6px; margin-bottom: 1.25rem; }
-.input-group label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.input-group label { font-size: 0.68rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px; }
 .input-style {
-  background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff;
-  padding: 12px 16px; border-radius: 12px; font-size: 1rem; outline: none; width: 100%;
+  background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff;
+  padding: 14px 16px; border-radius: 12px; font-size: 1rem; outline: none; width: 100%; font-weight: 600;
 }
+.input-style:focus { border-color: var(--accent-gold); }
 
 .btn-premium {
   background: linear-gradient(135deg, var(--accent-gold), #d97706);
-  color: #05070f; font-weight: 700; font-size: 1rem;
-  padding: 14px; width: 100%; border: none; border-radius: 14px; cursor: pointer;
+  color: #05070f; font-weight: 800; font-size: 1rem; letter-spacing: 0.5px;
+  padding: 15px; width: 100%; border: none; border-radius: 14px; cursor: pointer;
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
 }
 
 #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; }
 
+/* HUD DE JEU MODERNISÉ */
 .hud-container {
   position: absolute; inset: 0; pointer-events: none; z-index: 10;
-  display: flex; flex-direction: column; justify-content: space-between; padding: 12px;
+  display: flex; flex-direction: column; justify-content: space-between; padding: 14px;
 }
-
 .hud-top { display: flex; flex-direction: column; gap: 8px; width: 100%; pointer-events: auto; }
 .hud-panel {
-  background: rgba(9, 11, 23, 0.85); backdrop-filter: blur(15px);
-  border: 1px solid var(--glass-border); padding: 10px 16px; border-radius: 16px;
+  background: rgba(14, 11, 22, 0.85); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); padding: 12px 18px; border-radius: 18px;
   display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
-
 .score-board { display: flex; gap: 20px; align-items: center; width: 100%; justify-content: space-between; }
 .score-card { display: flex; flex-direction: column; }
-.score-num { font-family: 'Space Mono', monospace; font-size: 1.4rem; font-weight: 700; }
+.score-num { font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; }
 .score-num.n { color: var(--accent-blue); }
 .score-num.s { color: var(--accent-orange); }
 
-.hud-bottom-bar { display: flex; gap: 8px; width: 100%; pointer-events: auto; margin-bottom: 5px; }
+/* BOUTONS ACTIONS TOUT EN BAS ADAPTÉS AUX POUCES */
+.hud-bottom-bar { display: flex; gap: 10px; width: 100%; pointer-events: auto; margin-bottom: 6px; }
 .btn-action {
-  flex: 1; background: rgba(9, 11, 23, 0.85); backdrop-filter: blur(15px); border: 1px solid var(--glass-border);
-  color: var(--text-primary); padding: 14px 8px; border-radius: 14px; font-weight: 700; font-size: 0.85rem;
-  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+  flex: 1; background: rgba(14, 11, 22, 0.88); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+  color: var(--text-primary); padding: 15px 8px; border-radius: 16px; font-weight: 800; font-size: 0.85rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
 }
-.btn-action.leave { max-width: 60px; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
+.btn-action.leave { max-width: 65px; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
 
-.turn-status { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.8rem; }
-.pulse-indicator { width: 8px; height: 8px; border-radius: 50%; background-color: var(--accent-gold); animation: pulseGlow 1.5s infinite; }
-@keyframes pulseGlow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.4; } }
+.turn-status { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.82rem; color: #fff; }
+.pulse-indicator { width: 9px; height: 9px; border-radius: 50%; background-color: var(--accent-gold); animation: pulseGlow 1.5s infinite; }
+@keyframes pulseGlow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.4; } }
 
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(3, 5, 12, 0.95); backdrop-filter: blur(15px);
+  position: fixed; inset: 0; background: rgba(3, 5, 12, 0.96); backdrop-filter: blur(20px);
   z-index: 200; display: none; align-items: center; justify-content: center; padding: 15px;
 }
 .modal-overlay.active { display: flex; }
@@ -116,11 +160,31 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f97316); -web
 </head>
 <body>
 
+<div id="screen-loading">
+  <div class="loader-content">
+    <div class="loader-icon">
+      <svg width="45" height="55" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.5 2 3 6.5 3 13C3 19.5 7 26 12 28C17 26 21 19.5 21 13C21 6.5 17.5 2 12 2Z" fill="#2d1900" stroke="#f59e0b" stroke-width="2"/>
+        <path d="M12 4V13" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+        <path d="M7 11C8.5 11 9.5 12 9.5 13.5C9.5 15 8.5 15.5 7 15.5" stroke="#f97316" stroke-width="1.5"/>
+        <path d="M17 11C15.5 11 14.5 12 14.5 13.5C14.5 15 15.5 15.5 17 15.5" stroke="#f97316" stroke-width="1.5"/>
+        <path d="M9 21H15" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 24H14" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="loader-title">SONGO <span>3D ÉLITE</span></div>
+    <div class="loader-bar-container">
+      <div class="loader-bar-progress" id="loading-progress"></div>
+    </div>
+    <div class="loader-status" id="loading-text">Initialisation du village...</div>
+  </div>
+</div>
+
 <div id="canvas-container"></div>
 
-<div id="screen-lobby" class="screen active">
+<div id="screen-lobby" class="screen">
   <div class="glass-panel">
-    <h1>SONGO <span>ANDROID 3D</span></h1>
+    <h1>SONGO <span>AFRICA 3D</span></h1>
     
     <div class="mode-tabs">
       <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">Session Locale</div>
@@ -129,7 +193,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f97316); -web
 
     <div class="input-group">
       <label>Votre Pseudo</label>
-      <input id="input-name" class="input-style" type="text" value="Android_Player" maxlength="12">
+      <input id="input-name" class="input-style" type="text" value="Guerrier_Songo" maxlength="12">
     </div>
 
     <div id="online-configuration" style="display:none; flex-direction:column; gap:10px;">
@@ -143,17 +207,17 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f97316); -web
       </div>
     </div>
 
-    <button class="btn-premium" onclick="initiateGameSession()">Ouvrir l'Arène</button>
+    <button class="btn-premium" onclick="initiateGameSession()">Entrer dans l'Arène</button>
   </div>
 </div>
 
 <div id="screen-waiting" class="screen">
   <div class="glass-panel">
-    <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">Clé de connexion :</h2>
-    <div id="display-code" style="font-family:'Space Mono'; font-size:2rem; font-weight:700; color:var(--accent-gold); letter-spacing:4px; background:rgba(0,0,0,0.4); padding:12px; border-radius:14px; margin-bottom:1.5rem;">-----</div>
+    <h2 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-muted)">Clé du salon à partager :</h2>
+    <div id="display-code" style="font-family:'Space Mono'; font-size:2rem; font-weight:700; color:var(--accent-gold); letter-spacing:4px; background:rgba(0,0,0,0.5); padding:12px; border-radius:16px; margin-bottom:1.5rem; border:1px solid rgba(255,255,255,0.05)">-----</div>
     <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; color:var(--text-muted)">
       <div class="pulse-indicator"></div>
-      <span id="wait-status-text">Attente du joueur...</span>
+      <span id="wait-status-text">Invocations des esprits du jeu...</span>
     </div>
   </div>
 </div>
@@ -163,15 +227,15 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f97316); -web
     <div class="hud-panel">
       <div class="score-board">
         <div class="score-card">
-          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;" id="tag-n">NORD</span>
+          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:800; letter-spacing: 0.5px;" id="tag-n">NORD</span>
           <div class="score-num n" id="score-n">0</div>
         </div>
         <div class="turn-status">
           <div class="pulse-indicator" id="turn-glow"></div>
-          <span id="hud-turn-text" style="font-size:0.75rem;">...</span>
+          <span id="hud-turn-text" style="font-size:0.78rem;">...</span>
         </div>
         <div class="score-card" style="text-align:right;">
-          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;" id="tag-s">SUD</span>
+          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:800; letter-spacing: 0.5px;" id="tag-s">SUD</span>
           <div class="score-num s" id="score-s">0</div>
         </div>
       </div>
@@ -188,15 +252,56 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f97316); -web
 <div class="modal-overlay" id="end-modal">
   <div class="glass-panel">
     <div style="font-size:2.5rem; margin-bottom:0.5rem;">🏆</div>
-    <h2 id="end-title" style="font-size:1.4rem; margin-bottom:0.5rem;">Fin de Partie</h2>
+    <h2 id="end-title" style="font-size:1.4rem; margin-bottom:0.5rem;">Fin du Combat</h2>
     <p id="end-desc" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;"></p>
-    <button class="btn-premium" onclick="location.reload()">Menu Principal</button>
+    <button class="btn-premium" onclick="location.reload()">Retour au Village</button>
   </div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════
-// NOUVEAU LOGICIEL DE JEU SONGO CONFORME AUX RÈGLES OFFICIELLES
+// ANIMATION ET SIMULATION DE LA PAGE DE CHARGEMENT
+// ═══════════════════════════════════════════════════════
+const steps = [
+  { p: 25, t: "Sculpture du banc traditionnel..." },
+  { p: 55, t: "Extraction des graines sacrées..." },
+  { p: 85, t: "Génération de l'horizon africain..." },
+  { p: 100, t: "Prêt à jouer !" }
+];
+let currentStep = 0;
+
+function runFakeLoader() {
+  const bar = document.getElementById("loading-progress");
+  const txt = document.getElementById("loading-text");
+  
+  const interval = setInterval(() => {
+    if (currentStep < steps.length) {
+      bar.style.width = steps[currentStep].p + "%";
+      txt.innerText = steps[currentStep].t;
+      currentStep++;
+    } else {
+      clearInterval(interval);
+      // Disparition en fondu de l'écran de chargement
+      new TWEEN.Tween({ opacity: 1 })
+        .to({ opacity: 0 }, 400)
+        .onUpdate((obj) => {
+          document.getElementById("screen-loading").style.opacity = obj.opacity;
+        })
+        .onComplete(() => {
+          document.getElementById("screen-loading").style.display = "none";
+          document.getElementById("screen-lobby").classList.add("active");
+        })
+        .start();
+    }
+  }, 450);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  runFakeLoader();
+});
+
+// ═══════════════════════════════════════════════════════
+// CODE REGLES DU JEU SONGO CONFORME AU MOTEUR [cite: 2]
 // ═══════════════════════════════════════════════════════
 const CYCLE = [
   {p:"north",i:0},{p:"north",i:1},{p:"north",i:2},{p:"north",i:3},{p:"north",i:4},{p:"north",i:5},{p:"north",i:6},
@@ -279,7 +384,7 @@ function playMove(s, p, i) {
 }
 
 // ═══════════════════════════════════════════════════════
-// GESTION RÉSEAU ET ROUTAGE MOBILE
+// RESEAU TUNNEL
 // ═══════════════════════════════════════════════════════
 let gameMode = "local"; let onlineAction = "create";
 let G = null; let myRole = "south"; let roomCode = null; let ws = null;
@@ -299,11 +404,11 @@ function switchOnlineAction(a) {
 }
 
 function initiateGameSession() {
-  const name = document.getElementById("input-name").value.trim() || "Android";
+  const name = document.getElementById("input-name").value.trim() || "Guerrier";
   undoHistory = []; recommendedMove = null;
   
   if(gameMode === "local") {
-    playerNames = { north: "Joueur 2", south: name };
+    playerNames = { north: "Ancien du Village", south: name };
     G = createGame();
     initCore3DEngine();
     document.getElementById("screen-lobby").classList.remove("active");
@@ -318,7 +423,6 @@ function initiateGameSession() {
 }
 
 function connectToNetworkTunnel(name) {
-  // Adaptation de l'adresse WebSocket sécurisée absolue pour Android
   const hostLocation = window.location.host;
   const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
   ws = new WebSocket(protocol + hostLocation);
@@ -342,7 +446,7 @@ function connectToNetworkTunnel(name) {
     } else if(msg.type === 'move') {
       playMove(G, msg.move.player, msg.move.pitIndex); syncLogicTo3DVisuals();
     } else if(msg.type === 'opponent_disconnected') {
-      alert("Adversaire déconnecté."); exitToMainMenu();
+      alert("Votre adversaire s'est retiré du village."); exitToMainMenu();
     } else if(msg.type === 'error') {
       alert(msg.message); location.reload();
     }
@@ -368,32 +472,36 @@ function triggerUndoAction() {
 function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); location.reload(); }
 
 // ═══════════════════════════════════════════════════════
-// MOTEUR GRAPHIOUE 3D STABILISÉ POUR ANDROID
+// MOTEUR GRAPHIOUE 3D STABILISÉ AVEC ARRIÈRE-PLAN CULTUREL
 // ═══════════════════════════════════════════════════════
 let scene, camera, renderer, controls, pits3D = [], seedsGroup;
 let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
-let pointerStartTime = 0; // Distingue le tap du glissement de caméra
+let pointerStartTime = 0;
 
 function initCore3DEngine() {
   const container = document.getElementById("canvas-container");
   container.innerHTML = ""; pits3D = [];
-  scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x05070f, 0.02);
+  scene = new THREE.Scene(); 
+  
+  // Brouillard coloré chaud assorti à un coucher de soleil de savane (Teinte ocre/cuivre)
+  scene.fog = new THREE.FogExp2(0x1d1108, 0.025);
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
   
-  // Vue orthographique adaptative optimisée pour écran vertical Android
   const isMobile = window.innerWidth < 768;
   if(isMobile) {
-    camera.position.set(0, 15, 4.5);
+    camera.position.set(0, 15, 4.3);
   } else {
-    camera.position.set(0, 11, 12);
+    camera.position.set(0, 11, 11.5);
   }
 
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+  // Rendu avec alpha transparent pour fusionner parfaitement avec le fond d'écran
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Limite à 1.5 pour éviter la surchauffe Android
-  renderer.shadowMap.enabled = false; // Désactivé sur mobile pour garantir 60 FPS constants
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Protège la batterie Android d'une surchauffe
+  renderer.shadowMap.enabled = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
   container.appendChild(renderer.domElement);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -401,19 +509,24 @@ function initCore3DEngine() {
   controls.dampingFactor = 0.08;
   controls.maxPolarAngle = Math.PI / 2.2;
   controls.minDistance = 5; 
-  controls.maxDistance = 22;
-  controls.enablePan = false; // Empeche l'écran de se décaler en dehors du cadre en glissant à deux doigts
+  controls.maxDistance = 20;
+  controls.enablePan = false; // Maintient le plateau centré lors des gestes maladroits
 
   if(isMobile) {
     controls.rotateSpeed = 0.45;
   }
 
-  const ambientLight = new THREE.AmbientLight(0x22314d, 1.2); scene.add(ambientLight);
-  const sunLight = new THREE.DirectionalLight(0xfffbeb, 0.8); sunLight.position.set(2, 12, 2); scene.add(sunLight);
+  // Éclairage chaud imitant la lumière dorée d'un feu ou d'un coucher de soleil
+  const ambientLight = new THREE.AmbientLight(0x3a2518, 1.5); scene.add(ambientLight);
+  const sunLight = new THREE.DirectionalLight(0xffaa44, 1.4); sunLight.position.set(3, 10, 2); scene.add(sunLight);
+  const skyLight = new THREE.DirectionalLight(0x6688cc, 0.4); skyLight.position.set(-3, 8, -2); scene.add(skyLight);
 
-  // Structure du Banc en bois
+  // Le Banc en Bois Traditionnel sculpté
   const benchGroup = new THREE.Group();
-  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x331c10, roughness: 0.4, metalness: 0.1 });
+  const woodMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0x3d2011, roughness: 0.35, metalness: 0.05,
+    emissive: 0x140702, emissiveIntensity: 0.2
+  });
   
   const topMesh = new THREE.Mesh(new THREE.BoxGeometry(16.2, 0.5, 4.8), woodMaterial); topMesh.position.y = 1.0; benchGroup.add(topMesh);
   const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.0, 4.4), woodMaterial); leftLeg.position.set(-7.3, 0.5, 0); benchGroup.add(leftLeg);
@@ -422,11 +535,11 @@ function initCore3DEngine() {
 
   seedsGroup = new THREE.Group(); scene.add(seedsGroup);
 
-  // Positionnement des cavités
+  // Génération des 14 cavités sacrées
   for(let i=0; i<7; i++) createPremiumPit("north", i, -5.25 + (i * 1.75), -1.1);
   for(let i=0; i<7; i++) createPremiumPit("south", i, -5.25 + (i * 1.75), 1.1);
 
-  // ÉVÉNEMENTS SPÉCIFIQUES TACTILES ANDROID UNIFIÉS
+  // Événements tactiles Android sécurisés
   window.addEventListener('pointerdown', () => { pointerStartTime = Date.now(); });
   window.addEventListener('pointerup', handleAndroidTouchClick);
   window.addEventListener('resize', handleResize);
@@ -435,11 +548,11 @@ function initCore3DEngine() {
 }
 
 function createPremiumPit(player, idx, x, z) {
-  // Rayon élargi à 0.78 pour une tolérance parfaite aux gros doigts sur mobile
+  // Rayon large de 0.78 pour une tolérance tactile optimale au doigt
   const pitGeo = new THREE.CylinderGeometry(0.78, 0.62, 0.12, 20);
   const pitMat = new THREE.MeshStandardMaterial({ 
-    color: 0x140c06, roughness: 0.5,
-    emissive: player === "north" ? 0x1d4ed8 : 0xb45309, emissiveIntensity: 0.08
+    color: 0x170e08, roughness: 0.5,
+    emissive: player === "north" ? 0x2563eb : 0xd97706, emissiveIntensity: 0.12
   });
   const mesh = new THREE.Mesh(pitGeo, pitMat); mesh.position.set(x, 1.21, z); scene.add(mesh);
   
@@ -454,8 +567,8 @@ function syncLogicTo3DVisuals() {
   if(!G) return;
   document.getElementById("score-n").innerText = G.scores.north;
   document.getElementById("score-s").innerText = G.scores.south;
-  document.getElementById("tag-n").innerText = playerNames.north.substring(0, 10);
-  document.getElementById("tag-s").innerText = playerNames.south.substring(0, 10);
+  document.getElementById("tag-n").innerText = playerNames.north.substring(0, 12);
+  document.getElementById("tag-s").innerText = playerNames.south.substring(0, 12);
   
   const label = document.getElementById("hud-turn-text");
   const glow = document.getElementById("turn-glow");
@@ -464,9 +577,9 @@ function syncLogicTo3DVisuals() {
   adviceBtn.style.display = (gameMode === "online" && G.currentPlayer !== myRole) || G.status !== "playing" ? "none" : "flex";
 
   if(G.status === "ended") {
-    label.innerText = "Fini"; glow.style.backgroundColor = "var(--accent-gold)";
+    label.innerText = "Combat Fini"; glow.style.backgroundColor = "var(--accent-gold)";
     document.getElementById("end-title").innerText = `Victoire : ${playerNames[G.winner]}`;
-    document.getElementById("end-desc").innerText = `Score — N : ${G.scores.north} | S : ${G.scores.south}`;
+    document.getElementById("end-desc").innerText = `Scores Finaux — N : ${G.scores.north} | S : ${G.scores.south}`;
     document.getElementById("end-modal").classList.add("active");
   } else {
     label.innerText = G.currentPlayer === "south" ? "Tour : Sud" : "Tour : Nord";
@@ -476,8 +589,9 @@ function syncLogicTo3DVisuals() {
   while(seedsGroup.children.length > 0) { seedsGroup.remove(seedsGroup.children[0]); }
 
   const gemGeo = new THREE.DodecahedronGeometry(0.12);
-  const copperMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3 });
-  const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
+  // Matériaux type Bronze poli et Ambre/Or pour coller à la charte graphique
+  const copperMat = new THREE.MeshStandardMaterial({ color: 0xcd7f32, roughness: 0.2, metalness: 0.3 });
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xffb703, roughness: 0.1, metalness: 0.4 });
   const legals = getLegalMoves(G);
 
   pits3D.forEach(pit => {
@@ -489,12 +603,12 @@ function syncLogicTo3DVisuals() {
     if (isRecommended) {
       ringMesh.material.color.setHex(0xf59e0b); ringMesh.material.opacity = 0.95; ringMesh.scale.setScalar(1.08);
     } else if (isPlayable && (gameMode === "local" || G.currentPlayer === myRole)) {
-      ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.6; ringMesh.scale.setScalar(1.04);
+      ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.65; ringMesh.scale.setScalar(1.04);
     } else {
       ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.12; ringMesh.scale.setScalar(1.0);
     }
 
-    // Algorithme d'empilement stable
+    // Empilement stable
     for(let k=0; k<count; k++) {
       const gemMesh = new THREE.Mesh(gemGeo, k % 2 === 0 ? copperMat : goldMat);
       const angle = k * 1.25; const radius = Math.min(0.35, 0.06 * k);
@@ -508,8 +622,8 @@ function handleAndroidTouchClick(e) {
   if(!G || G.status !== "playing") return;
   if(gameMode === "online" && G.currentPlayer !== myRole) return;
 
-  // Si l'utilisateur est resté appuyé plus de 250ms, c'est qu'il glissait la caméra, on ignore le clic !
-  if (Date.now() - pointerStartTime > 250) return;
+  // Filtre les glissements de caméra (si appui > 220ms, action ignorée)
+  if (Date.now() - pointerStartTime > 220) return;
 
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -519,7 +633,7 @@ function handleAndroidTouchClick(e) {
   if(intersects.length > 0) {
     const { player, index } = intersects[0].object.userData;
     if(player === G.currentPlayer && getLegalMoves(G).some(m => m.p === player && m.i === index)) {
-      new TWEEN.Tween(intersects[0].object.position).to({ y: 1.15 }, 80).yoyo(true).repeat(1).to({ y: 1.21 }, 80).start();
+      new TWEEN.Tween(intersects[0].object.position).to({ y: 1.14 }, 80).yoyo(true).repeat(1).to({ y: 1.21 }, 80).start();
       playMove(G, player, index); syncLogicTo3DVisuals();
       if(gameMode === "online" && ws) ws.send(JSON.stringify({ type: 'move', code: roomCode, move: { player, pitIndex: index } }));
     }
@@ -531,7 +645,7 @@ function animateFrameLoop() {
   if(G && G.status === "playing") {
     pits3D.forEach(pit => {
       if (recommendedMove && recommendedMove.p === pit.userData.player && recommendedMove.i === pit.userData.index) {
-        pit.userData.ringMesh.material.opacity = 0.5 + Math.sin(Date.now() * 0.015) * 0.4;
+        pit.userData.ringMesh.material.opacity = 0.5 + Math.sin(Date.now() * 0.015) * 0.45;
       }
     });
   }
@@ -541,7 +655,7 @@ function animateFrameLoop() {
 function handleResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   const isMobile = window.innerWidth < 768;
-  if(isMobile) camera.position.set(0, 15, 4.5);
+  if(isMobile) camera.position.set(0, 15, 4.3);
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
