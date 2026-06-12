@@ -189,7 +189,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 <div id="screen-lobby" class="screen">
   <div class="glass-panel">
     <h1>SONGO <span>AFRICA</span></h1>
-    
+     
     <div class="mode-tabs">
       <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">Session Locale</div>
       <div class="mode-tab" id="tab-online" onclick="switchMode('online')">Arène En Ligne</div>
@@ -296,7 +296,7 @@ let currentStep = 0;
 function runFakeLoader() {
   const bar = document.getElementById("loading-progress");
   const txt = document.getElementById("loading-text");
-  
+   
   const interval = setInterval(() => {
     if (currentStep < steps.length) {
       bar.style.width = steps[currentStep].p + "%";
@@ -369,12 +369,12 @@ function playMove(s, p, i) {
   let seeds = s.board[p][i]; s.board[p][i] = 0;
   let curr = cycleIdx({p, i});
   let lastPos = null;
-  
+   
   for(let k=0; k<seeds; k++) {
     curr = (curr + 1) % 14; s.board[CYCLE[curr].p][CYCLE[curr].i]++;
     if(k === seeds - 1) lastPos = CYCLE[curr];
   }
-  
+   
   if(lastPos && lastPos.p === other(p)) {
     let pts = s.board[lastPos.p][lastPos.i];
     if([2,3,4].includes(pts)) {
@@ -418,7 +418,7 @@ function initiateGameSession() {
   const name = document.getElementById("input-name").value.trim() || "Guerrier";
   undoHistory = []; recommendedMove = null;
   startBackgroundMusic();
-  
+   
   if(gameMode === "local") {
     playerNames = { north: "SAGE DU VILLAGE", south: name.toUpperCase() };
     G = createGame();
@@ -435,12 +435,12 @@ function initiateGameSession() {
 }
 
 function connectToNetworkTunnel(name) {
-  // ADRESSE DU SERVEUR DE JEU RENDER EN PROD
-  const hostLocation = "songo-websocket-server.onrender.com"; 
+  // TON LIEN DE PROD SUR RENDER ENTIÈREMENT CONFIGURÉ ICI :
+  const hostLocation = "songho-mlde.onrender.com"; 
   const protocol = 'wss://'; 
-  
+   
   ws = new WebSocket(protocol + hostLocation);
-  
+   
   ws.onopen = () => {
     if(onlineAction === "create") {
       ws.send(JSON.stringify({ type: 'create', name: name }));
@@ -452,7 +452,7 @@ function connectToNetworkTunnel(name) {
 
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    
+     
     if(msg.type === 'room_created') {
       roomCode = msg.code; 
       myRole = "south"; 
@@ -468,7 +468,7 @@ function connectToNetworkTunnel(name) {
       initCore3DEngine();
       document.getElementById("screen-waiting").classList.remove("active");
       document.getElementById("game-hud").style.display = "flex";
-      document.getElementById("btn-undo").style.display = "none"; // Désactivé en ligne pour équité
+      document.getElementById("btn-undo").style.display = "none"; 
       syncLogicTo3DVisuals();
     } 
     else if(msg.type === 'move') {
@@ -487,7 +487,7 @@ function connectToNetworkTunnel(name) {
 
   ws.onerror = (err) => {
     console.error("Erreur Réseau WebSocket:", err);
-    alert("Impossible de joindre le serveur. Vérifie ton déploiement Render.");
+    alert("Impossible de joindre le serveur. Pense à cliquer sur ton lien Render pour le réveiller s'il était éteint.");
     exitToMainMenu();
   };
 }
@@ -525,7 +525,7 @@ function initCore3DEngine() {
   const container = document.getElementById("canvas-container");
   container.innerHTML = ""; pits3D = [];
   scene = new THREE.Scene(); 
-  
+   
   scene.fog = new THREE.FogExp2(0x0a0502, 0.035);
 
   camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -558,7 +558,7 @@ function initCore3DEngine() {
     color: 0x22120b, roughness: 0.45, metalness: 0.1,
     emissive: 0x050201, roughnessMap: null
   });
-  
+   
   const topMesh = new THREE.Mesh(new THREE.BoxGeometry(16.0, 0.5, 4.6), woodMaterial); topMesh.position.y = 1.0; benchGroup.add(topMesh);
   const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 4.2), woodMaterial); leftLeg.position.set(-7.2, 0.5, 0); benchGroup.add(leftLeg);
   const rightLeg = leftLeg.clone(); rightLeg.position.x = 7.2; benchGroup.add(rightLeg);
@@ -572,7 +572,7 @@ function initCore3DEngine() {
   window.addEventListener('pointerdown', () => { pointerStartTime = Date.now(); });
   window.addEventListener('pointerup', handleAndroidTouchClick);
   window.addEventListener('resize', handleResize);
-  
+   
   animateFrameLoop();
 }
 
@@ -582,7 +582,7 @@ function createPremiumPit(player, idx, x, z) {
     color: 0x0f0704, roughness: 0.6, metalness: 0.2
   });
   const mesh = new THREE.Mesh(pitGeo, pitMat); mesh.position.set(x, 1.20, z); scene.add(mesh);
-  
+   
   const ringGeo = new THREE.RingGeometry(0.76, 0.81, 30);
   const ringMat = new THREE.MeshBasicMaterial({ 
     color: player === "north" ? 0x60a5fa : 0xf97316, 
@@ -599,11 +599,11 @@ function syncLogicTo3DVisuals() {
   document.getElementById("score-s").innerText = G.scores.south;
   document.getElementById("tag-n").innerText = playerNames.north;
   document.getElementById("tag-s").innerText = playerNames.south;
-  
+   
   const label = document.getElementById("hud-turn-text");
   const glow = document.getElementById("turn-glow");
   const adviceBtn = document.getElementById("btn-advice");
-  
+   
   adviceBtn.style.display = (gameMode === "online" && G.currentPlayer !== myRole) || G.status !== "playing" ? "none" : "flex";
 
   if(G.status === "ended") {
@@ -632,7 +632,7 @@ function syncLogicTo3DVisuals() {
     const count = G.board[player][index];
     const isRecommended = recommendedMove && recommendedMove.p === player && recommendedMove.i === index;
     const isPlayable = legals.some(m => m.p === player && m.i === index) && G.status === "playing";
-    
+     
     if (isRecommended) {
       ringMesh.material.color.setHex(0xfbbf24); ringMesh.material.opacity = 1.0; ringMesh.scale.setScalar(1.06);
     } else if (isPlayable && (gameMode === "local" || G.currentPlayer === myRole)) {
@@ -645,13 +645,13 @@ function syncLogicTo3DVisuals() {
       const gemMesh = new THREE.Mesh(gemGeo, k % 3 === 0 ? copperMat : goldMat);
       const angle = k * 1.40; const radius = Math.min(0.34, 0.055 * k);
       const targetY = 1.28 + (Math.floor(k / 5) * 0.10);
-      
+       
       gemMesh.position.set(
         pit.position.x + Math.cos(angle) * radius,
         targetY + 2.0,
         pit.position.z + Math.sin(angle) * radius
       );
-      
+       
       new TWEEN.Tween(gemMesh.position).to({ y: targetY }, 350 + (k*15)).easing(TWEEN.Easing.Bounce.Out).start();
       gemMesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
       seedsGroup.add(gemMesh);
@@ -661,7 +661,7 @@ function syncLogicTo3DVisuals() {
 
 function handleAndroidTouchClick(e) {
   if(!G || G.status !== "playing") return;
-  if(gameMode === "online" && G.currentPlayer !== myRole) return; // Bloque le clic si ce n'est pas son tour en ligne
+  if(gameMode === "online" && G.currentPlayer !== myRole) return; 
   if (Date.now() - pointerStartTime > 200) return;
 
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -673,10 +673,10 @@ function handleAndroidTouchClick(e) {
     const { player, index } = intersects[0].object.userData;
     if(player === G.currentPlayer && getLegalMoves(G).some(m => m.p === player && m.i === index)) {
       new TWEEN.Tween(intersects[0].object.position).to({ y: 1.12 }, 70).easing(TWEEN.Easing.Quadratic.Out).yoyo(true).repeat(1).to({ y: 1.20 }, 70).start();
-      
+       
       playMove(G, player, index); 
       syncLogicTo3DVisuals();
-      
+       
       if(gameMode === "online" && ws) {
         ws.send(JSON.stringify({ type: 'move', code: roomCode, move: { player, pitIndex: index } }));
       }
@@ -686,7 +686,7 @@ function handleAndroidTouchClick(e) {
 
 function animateFrameLoop() {
   requestAnimationFrame(animateFrameLoop); TWEEN.update(); controls.update();
-  
+   
   if(G && G.status === "playing") {
     const time = Date.now() * 0.004;
     pits3D.forEach(pit => {
