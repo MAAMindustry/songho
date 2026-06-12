@@ -8,15 +8,16 @@
 
 <style>
 :root {
-  --bg-dark: #05070f;
-  --panel-bg: rgba(14, 11, 22, 0.82);
-  --accent-gold: #f59e0b;
-  --accent-blue: #3b82f6;
+  --bg-dark: #030408;
+  --panel-bg: rgba(10, 11, 18, 0.75);
+  --accent-gold: #fbbf24;
+  --accent-blue: #60a5fa;
   --accent-orange: #f97316;
   --accent-red: #ef4444;
   --text-primary: #f8fafc;
-  --text-muted: #94a3b8;
-  --glass-border: rgba(245, 158, 11, 0.15);
+  --text-muted: #64748b;
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glow-gold: rgba(251, 191, 36, 0.3);
 }
 
 /* Optimisation pour le tactile Android/iOS */
@@ -35,123 +36,122 @@ body, html {
   -webkit-user-select: none; user-select: none;
 }
 
-/* ÉCRAN DE CHARGEMENT SÉCURISÉ */
+/* ÉCRAN DE CHARGEMENT PREMIUM */
 #screen-loading {
   position: fixed; inset: 0; z-index: 999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: radial-gradient(circle at center, #1a1008 0%, #05070f 100%);
+  background: radial-gradient(circle at center, #130a04 0%, #030408 100%);
   opacity: 1;
-  transition: opacity 0.5s ease-out, visibility 0.5s;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
 }
 #screen-loading.fade-out {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  opacity: 0; visibility: hidden; pointer-events: none;
 }
 
 .loader-content {
-  display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center;
 }
 .loader-icon {
-  width: 90px; height: 90px;
-  background: linear-gradient(135deg, #f59e0b, #b45309);
-  border-radius: 24px; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
-  animation: pulseLogo 2s infinite ease-in-out;
+  width: 100px; height: 100px;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  border-radius: 28px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 20px 40px rgba(217, 119, 6, 0.25);
+  animation: pulseLogo 2.5s infinite ease-in-out;
 }
-@keyframes pulseLogo { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes pulseLogo { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.04); filter: brightness(1.15); } }
 
 .loader-title {
-  font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #fff;
+  font-size: 2rem; font-weight: 800; letter-spacing: 3px; color: #fff;
 }
 .loader-title span { color: var(--accent-gold); }
 .loader-bar-container {
-  width: 220px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; position: relative;
+  width: 240px; height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; position: relative;
 }
 .loader-bar-progress {
   width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-orange), var(--accent-gold));
-  border-radius: 10px; transition: width 0.3s ease-out;
+  border-radius: 10px; transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.loader-status { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--text-muted); }
+.loader-status { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-/* Écrans de menu */
+/* Écrans de menu en Glassmorphism moderne */
 .screen {
   position: absolute; inset: 0; z-index: 100;
   display: none; flex-direction: column; align-items: center; justify-content: center;
-  background: radial-gradient(circle at center, rgba(5,7,15,0.5) 0%, rgba(5,7,15,0.92) 100%);
-  backdrop-filter: blur(12px); padding: 15px;
+  background: radial-gradient(circle at center, rgba(3,4,8,0.3) 0%, rgba(3,4,8,0.85) 100%);
+  backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 20px;
 }
 .screen.active { display: flex; }
 
 .glass-panel {
   background: var(--panel-bg);
-  border: 2px solid var(--glass-border);
-  border-radius: 28px; padding: 2.2rem 1.8rem;
-  width: 100%; max-width: 390px; text-align: center;
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.05);
-  position: relative; overflow: hidden;
-}
-.glass-panel::before {
-  content: ""; position: absolute; inset: 0; opacity: 0.03; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0h30v30H0zm30 30h30v30H30z' fill='%23fff'/%3E%3C/svg%3E");
+  border: 1px solid var(--glass-border);
+  border-radius: 32px; padding: 2.5rem 2rem;
+  width: 100%; max-width: 400px; text-align: center;
+  box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255,255,255,0.1);
+  position: relative;
 }
 
-h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.5px; }
-h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h1 { font-size: 1.9rem; font-weight: 800; margin-bottom: 1.8rem; letter-spacing: -0.5px; }
+h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-.mode-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 14px; margin-bottom: 1.25rem; border: 1px solid rgba(255,255,255,0.05); }
-.mode-tab { flex: 1; padding: 11px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.8rem; color: var(--text-muted); transition: all 0.2s; }
-.mode-tab.active { background: rgba(245, 158, 11, 0.15); color: var(--accent-gold); border: 1px solid rgba(245, 158, 11, 0.25); }
+.mode-tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 16px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.03); }
+.mode-tab { flex: 1; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.82rem; color: var(--text-muted); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.mode-tab.active { background: #fff; color: #030408; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
 
-.input-group { display: flex; flex-direction: column; text-align: left; gap: 6px; margin-bottom: 1.25rem; }
-.input-group label { font-size: 0.68rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px; }
+.input-group { display: flex; flex-direction: column; text-align: left; gap: 8px; margin-bottom: 1.5rem; }
+.input-group label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
 .input-style {
-  background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff;
-  padding: 14px 16px; border-radius: 12px; font-size: 1rem; outline: none; width: 100%; font-weight: 600;
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff;
+  padding: 16px; border-radius: 14px; font-size: 0.95rem; outline: none; width: 100%; font-weight: 600;
+  transition: border-color 0.2s;
 }
+.input-style:focus { border-color: var(--accent-gold); }
 
 .btn-premium {
-  background: linear-gradient(135deg, var(--accent-gold), #d97706);
-  color: #05070f; font-weight: 800; font-size: 1rem; letter-spacing: 0.5px;
-  padding: 15px; width: 100%; border: none; border-radius: 14px; cursor: pointer;
-  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+  background: #fff; color: #030408; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.3px;
+  padding: 16px; width: 100%; border: none; border-radius: 16px; cursor: pointer;
+  box-shadow: 0 10px 25px rgba(255,255,255,0.08);
+  transition: transform 0.2s, filter 0.2s;
 }
+.btn-premium:active { transform: scale(0.98); }
 
-#canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; }
+#canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; background: #030408; }
 
-/* HUD DE JEU */
+/* HUD DE JEU MODERNISÉ */
 .hud-container {
   position: absolute; inset: 0; pointer-events: none; z-index: 10;
-  display: flex; flex-direction: column; justify-content: space-between; padding: 14px;
+  display: flex; flex-direction: column; justify-content: space-between; padding: 20px;
 }
-.hud-top { display: flex; flex-direction: column; gap: 8px; width: 100%; pointer-events: auto; }
+.hud-top { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 500px; margin: 0 auto; pointer-events: auto; }
 .hud-panel {
-  background: rgba(14, 11, 22, 0.85); backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border); padding: 12px 18px; border-radius: 18px;
-  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(10, 11, 18, 0.65); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border); padding: 14px 24px; border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 .score-board { display: flex; gap: 20px; align-items: center; width: 100%; justify-content: space-between; }
 .score-card { display: flex; flex-direction: column; }
-.score-num { font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; }
-.score-num.n { color: var(--accent-blue); }
-.score-num.s { color: var(--accent-orange); }
+.score-num { font-family: 'Space Mono', monospace; font-size: 1.8rem; font-weight: 700; line-height: 1.1; }
+.score-num.n { color: var(--accent-blue); text-shadow: 0 0 15px rgba(96, 165, 250, 0.3); }
+.score-num.s { color: var(--accent-orange); text-shadow: 0 0 15px rgba(249, 115, 22, 0.3); }
 
-.hud-bottom-bar { display: flex; gap: 10px; width: 100%; pointer-events: auto; margin-bottom: 6px; }
+.hud-bottom-bar { display: flex; gap: 12px; width: 100%; max-width: 500px; margin: 0 auto 10px auto; pointer-events: auto; }
 .btn-action {
-  flex: 1; background: rgba(14, 11, 22, 0.88); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
-  color: var(--text-primary); padding: 15px 8px; border-radius: 16px; font-weight: 800; font-size: 0.85rem;
-  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  flex: 1; background: rgba(10, 11, 18, 0.65); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid var(--glass-border);
+  color: var(--text-primary); padding: 16px 8px; border-radius: 18px; font-weight: 800; font-size: 0.85rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3); transition: background 0.2s, transform 0.1s;
 }
-.btn-action.leave { max-width: 65px; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
+.btn-action:active { transform: scale(0.95); }
+.btn-action.leave { max-width: 65px; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
 .btn-action.audio { max-width: 65px; }
 
-.turn-status { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.82rem; color: #fff; }
-.pulse-indicator { width: 9px; height: 9px; border-radius: 50%; background-color: var(--accent-gold); animation: pulseGlow 1.5s infinite; }
-@keyframes pulseGlow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.4; } }
+.turn-status { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase; }
+.pulse-indicator { width: 8px; height: 8px; border-radius: 50%; background-color: var(--accent-gold); animation: pulseGlow 1.8s infinite ease-in-out; }
+@keyframes pulseGlow { 0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); } 50% { transform: scale(1.3); opacity: 0.6; box-shadow: 0 0 12px 4px rgba(251, 191, 36, 0.4); } }
 
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(3, 5, 12, 0.96); backdrop-filter: blur(20px);
-  z-index: 200; display: none; align-items: center; justify-content: center; padding: 15px;
+  position: fixed; inset: 0; background: rgba(3, 4, 8, 0.93); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+  z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px;
 }
 .modal-overlay.active { display: flex; }
 </style>
@@ -170,19 +170,17 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
   <div class="loader-content">
     <div class="loader-icon">
       <svg width="45" height="55" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C6.5 2 3 6.5 3 13C3 19.5 7 26 12 28C17 26 21 19.5 21 13C21 6.5 17.5 2 12 2Z" fill="#2d1900" stroke="#f59e0b" stroke-width="2"/>
-        <path d="M12 4V13" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 2C6.5 2 3 6.5 3 13C3 19.5 7 26 12 28C17 26 21 19.5 21 13C21 6.5 17.5 2 12 2Z" fill="#150b02" stroke="#fbbf24" stroke-width="2.5"/>
+        <path d="M12 4V13" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
         <path d="M7 11C8.5 11 9.5 12 9.5 13.5C9.5 15 8.5 15.5 7 15.5" stroke="#f97316" stroke-width="1.5"/>
         <path d="M17 11C15.5 11 14.5 12 14.5 13.5C14.5 15 15.5 15.5 17 15.5" stroke="#f97316" stroke-width="1.5"/>
-        <path d="M9 21H15" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
-        <path d="M10 24H14" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="loader-title">SONGO <span>3D ÉLITE</span></div>
     <div class="loader-bar-container">
       <div class="loader-bar-progress" id="loading-progress"></div>
     </div>
-    <div class="loader-status" id="loading-text">Initialisation du village...</div>
+    <div class="loader-status" id="loading-text">Rituel du village...</div>
   </div>
 </div>
 
@@ -190,7 +188,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 
 <div id="screen-lobby" class="screen">
   <div class="glass-panel">
-    <h1>SONGO <span>AFRICA 3D</span></h1>
+    <h1>SONGO <span>AFRICA</span></h1>
     
     <div class="mode-tabs">
       <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">Session Locale</div>
@@ -219,11 +217,11 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
 
 <div id="screen-waiting" class="screen">
   <div class="glass-panel">
-    <h2 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-muted)">Clé du salon à partager :</h2>
-    <div id="display-code" style="font-family:'Space Mono'; font-size:2rem; font-weight:700; color:var(--accent-gold); letter-spacing:4px; background:rgba(0,0,0,0.5); padding:12px; border-radius:16px; margin-bottom:1.5rem; border:1px solid rgba(255,255,255,0.05)">-----</div>
-    <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; color:var(--text-muted)">
+    <h2 style="font-size:1rem; margin-bottom:0.5rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Clé de l'arène :</h2>
+    <div id="display-code" style="font-family:'Space Mono'; font-size:2.2rem; font-weight:700; color:var(--accent-gold); letter-spacing:4px; background:rgba(0,0,0,0.3); padding:16px; border-radius:20px; margin-bottom:1.8rem; border:1px solid rgba(255,255,255,0.05)">-----</div>
+    <div style="display:flex; align-items:center; justify-content:center; gap:10px; font-size:0.85rem; color:var(--text-muted)">
       <div class="pulse-indicator"></div>
-      <span id="wait-status-text">Invocations des esprits du jeu...</span>
+      <span id="wait-status-text">Attente d'un digne adversaire...</span>
     </div>
   </div>
 </div>
@@ -233,15 +231,15 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
     <div class="hud-panel">
       <div class="score-board">
         <div class="score-card">
-          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:800; letter-spacing: 0.5px;" id="tag-n">NORD</span>
+          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:800; letter-spacing: 1px;" id="tag-n">NORD</span>
           <div class="score-num n" id="score-n">0</div>
         </div>
         <div class="turn-status">
           <div class="pulse-indicator" id="turn-glow"></div>
-          <span id="hud-turn-text" style="font-size:0.78rem;">...</span>
+          <span id="hud-turn-text" style="font-size:0.75rem;">...</span>
         </div>
         <div class="score-card" style="text-align:right;">
-          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:800; letter-spacing: 0.5px;" id="tag-s">SUD</span>
+          <span style="font-size:0.65rem; color:var(--text-muted); font-weight:800; letter-spacing: 1px;" id="tag-s">SUD</span>
           <div class="score-num s" id="score-s">0</div>
         </div>
       </div>
@@ -251,55 +249,47 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), var(--accent-o
   <div class="hud-bottom-bar">
     <button class="btn-action leave" onclick="exitToMainMenu()">🚪</button>
     <button class="btn-action audio" id="btn-audio" onclick="toggleAudioMute()">🔊</button>
-    <button class="btn-action" id="btn-undo" onclick="triggerUndoAction()" style="display:none;">↩️ Retour</button>
-    <button class="btn-action" id="btn-advice" onclick="requestStrategicAdvice()">💡 Conseil</button>
+    <button class="btn-action" id="btn-undo" onclick="triggerUndoAction()" style="display:none;">↩️ Annuler</button>
+    <button class="btn-action" id="btn-advice" onclick="requestStrategicAdvice()">💡 Stratégie</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="end-modal">
-  <div class="glass-panel">
-    <div style="font-size:2.5rem; margin-bottom:0.5rem;">🏆</div>
-    <h2 id="end-title" style="font-size:1.4rem; margin-bottom:0.5rem;">Fin du Combat</h2>
-    <p id="end-desc" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;"></p>
-    <button class="btn-premium" onclick="location.reload()">Retour au Village</button>
+  <div class="glass-panel" style="box-shadow: 0 0 50px rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.2);">
+    <div style="font-size:3rem; margin-bottom:0.5rem; filter: drop-shadow(0 10px 15px rgba(251,191,36,0.3));">🏆</div>
+    <h2 id="end-title" style="font-size:1.6rem; margin-bottom:0.5rem;">Fin du Combat</h2>
+    <p id="end-desc" style="color:var(--text-muted); font-size:0.88rem; margin-bottom:2rem; font-family:'Space Mono';"></p>
+    <button class="btn-premium" onclick="location.reload()" style="background:var(--accent-gold); color:#000;">Retour au Village</button>
   </div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════
-// GESTION AUDIO DE LA MUSIQUE
+// GESTION MULTIMÉDIA (AUDIO)
 // ═══════════════════════════════════════════════════════
 const audioTrack = document.getElementById("bg-music");
 let isMuted = false;
 
 function startBackgroundMusic() {
-  audioTrack.volume = 0.4; // Ajuste le volume à 40% pour ne pas agresser les oreilles
-  audioTrack.play().catch(err => {
-    console.log("Lecture audio différée en attente d'action utilisateur complète.");
-  });
+  audioTrack.volume = 0.35;
+  audioTrack.play().catch(() => console.log("Audio en attente d'interaction."));
 }
 
 function toggleAudioMute() {
   const btn = document.getElementById("btn-audio");
-  if (isMuted) {
-    audioTrack.muted = false;
-    btn.innerText = "🔊";
-    isMuted = false;
-  } else {
-    audioTrack.muted = true;
-    btn.innerText = "🔇";
-    isMuted = true;
-  }
+  isMuted = !isMuted;
+  audioTrack.muted = isMuted;
+  btn.innerText = isMuted ? "🔇" : "🔊";
 }
 
 // ═══════════════════════════════════════════════════════
-// LOGIQUE DE CHARGEMENT SÉCURISÉE SANS BLOCAGE
+// LOADER DE CHARGEMENT FLUIDE
 // ═══════════════════════════════════════════════════════
 const steps = [
-  { p: 25, t: "Sculpture du banc traditionnel..." },
-  { p: 55, t: "Extraction des graines sacrées..." },
-  { p: 85, t: "Génération de l'horizon africain..." },
-  { p: 100, t: "Prêt à jouer !" }
+  { p: 30, t: "Sculpture du banc en acajou..." },
+  { p: 65, t: "Polissage des gemmes d'or..." },
+  { p: 90, t: "Allumage des feux du crépuscule..." },
+  { p: 100, t: "Prêt pour le combat." }
 ];
 let currentStep = 0;
 
@@ -314,17 +304,15 @@ function runFakeLoader() {
       currentStep++;
     } else {
       clearInterval(interval);
-      const loader = document.getElementById("screen-loading");
-      loader.classList.add("fade-out");
+      document.getElementById("screen-loading").classList.add("fade-out");
       document.getElementById("screen-lobby").classList.add("active");
     }
-  }, 350);
+  }, 300);
 }
-
 window.addEventListener('DOMContentLoaded', runFakeLoader);
 
 // ═══════════════════════════════════════════════════════
-// MOTEUR ET RÈGLES DU JEU SONGO
+// LOGIQUE DU JEU SONGO
 // ═══════════════════════════════════════════════════════
 const CYCLE = [
   {p:"north",i:0},{p:"north",i:1},{p:"north",i:2},{p:"north",i:3},{p:"north",i:4},{p:"north",i:5},{p:"north",i:6},
@@ -429,12 +417,10 @@ function switchOnlineAction(a) {
 function initiateGameSession() {
   const name = document.getElementById("input-name").value.trim() || "Guerrier";
   undoHistory = []; recommendedMove = null;
-  
-  // DÉMARRAGE DE LA MUSIQUE ICI (Sécurisé par le clic de l'utilisateur)
   startBackgroundMusic();
   
   if(gameMode === "local") {
-    playerNames = { north: "Ancien du Village", south: name };
+    playerNames = { north: "SAGE DU VILLAGE", south: name.toUpperCase() };
     G = createGame();
     initCore3DEngine();
     document.getElementById("screen-lobby").classList.remove("active");
@@ -449,8 +435,10 @@ function initiateGameSession() {
 }
 
 function connectToNetworkTunnel(name) {
-  const hostLocation = window.location.host;
-  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+  // CONFIGURATION DU TUNNEL RÉSEAU MULTIJOUEUR
+  const hostLocation = "songo-websocket-server.onrender.com"; // Remplacer par ton vrai sous-domaine Render
+  const protocol = 'wss://'; 
+  
   ws = new WebSocket(protocol + hostLocation);
   
   ws.onopen = () => {
@@ -472,7 +460,7 @@ function connectToNetworkTunnel(name) {
     } else if(msg.type === 'move') {
       playMove(G, msg.move.player, msg.move.pitIndex); syncLogicTo3DVisuals();
     } else if(msg.type === 'opponent_disconnected') {
-      alert("Votre adversaire s'est retiré du village."); exitToMainMenu();
+      alert("L'adversaire a fui le combat."); exitToMainMenu();
     } else if(msg.type === 'error') {
       alert(msg.message); location.reload();
     }
@@ -498,7 +486,7 @@ function triggerUndoAction() {
 function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); location.reload(); }
 
 // ═══════════════════════════════════════════════════════
-// MOTEUR GRAPHIQUE 3D STABILISÉ POUR MOBILE
+// MOTEUR GRAPHIQUE PRO & ANIMATIONS HAUTE FIDÉLITÉ
 // ═══════════════════════════════════════════════════════
 let scene, camera, renderer, controls, pits3D = [], seedsGroup;
 let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
@@ -509,50 +497,45 @@ function initCore3DEngine() {
   container.innerHTML = ""; pits3D = [];
   scene = new THREE.Scene(); 
   
-  scene.fog = new THREE.FogExp2(0x1d1108, 0.025);
+  // Ambiance de brouillard ocre très immersive (effet coucher de soleil)
+  scene.fog = new THREE.FogExp2(0x0a0502, 0.035);
 
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-  
+  camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
   const isMobile = window.innerWidth < 768;
-  if(isMobile) {
-    camera.position.set(0, 15, 4.3);
-  } else {
-    camera.position.set(0, 11, 11.5);
-  }
+  if(isMobile) camera.position.set(0, 14, 5.0);
+  else camera.position.set(0, 11, 11.0);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: false });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-  renderer.shadowMap.enabled = false;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limite à 2x pour préserver la batterie mobile
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; // Rendu de couleur ultra-réaliste typé cinéma
+  renderer.toneMappingExposure = 1.25;
   container.appendChild(renderer.domElement);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; 
-  controls.dampingFactor = 0.08;
-  controls.maxPolarAngle = Math.PI / 2.2;
-  controls.minDistance = 5; 
-  controls.maxDistance = 20;
+  controls.dampingFactor = 0.05;
+  controls.maxPolarAngle = Math.PI / 2.15;
+  controls.minDistance = 6; 
+  controls.maxDistance = 16;
   controls.enablePan = false;
+  if(isMobile) controls.rotateSpeed = 0.5;
 
-  if(isMobile) {
-    controls.rotateSpeed = 0.45;
-  }
+  // SCHÉMA LUMINEUX COMPLEXE TYPE STUDIO DE JEUX
+  const ambientLight = new THREE.AmbientLight(0x1a111e, 1.2); scene.add(ambientLight);
+  const sunLight = new THREE.DirectionalLight(0xffa64d, 1.8); sunLight.position.set(6, 12, 4); scene.add(sunLight);
+  const rimLight = new THREE.DirectionalLight(0x5ca7ff, 0.6); rimLight.position.set(-6, 8, -4); scene.add(rimLight);
 
-  const ambientLight = new THREE.AmbientLight(0x3a2518, 1.5); scene.add(ambientLight);
-  const sunLight = new THREE.DirectionalLight(0xffaa44, 1.4); sunLight.position.set(3, 10, 2); scene.add(sunLight);
-  const skyLight = new THREE.DirectionalLight(0x6688cc, 0.4); skyLight.position.set(-3, 8, -2); scene.add(skyLight);
-
+  // CRÉATION DU BANC AVEC TEXTURE DE BOIS PBR ÉLITE
   const benchGroup = new THREE.Group();
   const woodMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0x3d2011, roughness: 0.35, metalness: 0.05,
-    emissive: 0x140702, emissiveIntensity: 0.2
+    color: 0x22120b, roughness: 0.45, metalness: 0.1,
+    emissive: 0x050201, roughnessMap: null
   });
   
-  const topMesh = new THREE.Mesh(new THREE.BoxGeometry(16.2, 0.5, 4.8), woodMaterial); topMesh.position.y = 1.0; benchGroup.add(topMesh);
-  const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.0, 4.4), woodMaterial); leftLeg.position.set(-7.3, 0.5, 0); benchGroup.add(leftLeg);
-  const rightLeg = leftLeg.clone(); rightLeg.position.x = 7.3; benchGroup.add(rightLeg);
+  const topMesh = new THREE.Mesh(new THREE.BoxGeometry(16.0, 0.5, 4.6), woodMaterial); topMesh.position.y = 1.0; benchGroup.add(topMesh);
+  const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 4.2), woodMaterial); leftLeg.position.set(-7.2, 0.5, 0); benchGroup.add(leftLeg);
+  const rightLeg = leftLeg.clone(); rightLeg.position.x = 7.2; benchGroup.add(rightLeg);
   scene.add(benchGroup);
 
   seedsGroup = new THREE.Group(); scene.add(seedsGroup);
@@ -568,16 +551,20 @@ function initCore3DEngine() {
 }
 
 function createPremiumPit(player, idx, x, z) {
-  const pitGeo = new THREE.CylinderGeometry(0.78, 0.62, 0.12, 20);
+  // Cavités creuses sculptées avec bordures adoucies
+  const pitGeo = new THREE.CylinderGeometry(0.76, 0.60, 0.15, 24);
   const pitMat = new THREE.MeshStandardMaterial({ 
-    color: 0x170e08, roughness: 0.5,
-    emissive: player === "north" ? 0x2563eb : 0xd97706, emissiveIntensity: 0.12
+    color: 0x0f0704, roughness: 0.6, metalness: 0.2
   });
-  const mesh = new THREE.Mesh(pitGeo, pitMat); mesh.position.set(x, 1.21, z); scene.add(mesh);
+  const mesh = new THREE.Mesh(pitGeo, pitMat); mesh.position.set(x, 1.20, z); scene.add(mesh);
   
-  const ringGeo = new THREE.RingGeometry(0.78, 0.82, 20);
-  const ringMat = new THREE.MeshBasicMaterial({ color: player === "north" ? 0x3b82f6 : 0xf97316, side: THREE.DoubleSide, transparent: true, opacity: 0.2 });
-  const ring = new THREE.Mesh(ringGeo, ringMat); ring.rotation.x = Math.PI / 2; ring.position.set(x, 1.27, z); scene.add(ring);
+  // Anneau de sélection lumineux futuriste/néon au sol
+  const ringGeo = new THREE.RingGeometry(0.76, 0.81, 30);
+  const ringMat = new THREE.MeshBasicMaterial({ 
+    color: player === "north" ? 0x60a5fa : 0xf97316, 
+    side: THREE.DoubleSide, transparent: true, opacity: 0.05 
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat); ring.rotation.x = Math.PI / 2; ring.position.set(x, 1.26, z); scene.add(ring);
 
   mesh.userData = { player, index: idx, ringMesh: ring }; pits3D.push(mesh);
 }
@@ -586,8 +573,8 @@ function syncLogicTo3DVisuals() {
   if(!G) return;
   document.getElementById("score-n").innerText = G.scores.north;
   document.getElementById("score-s").innerText = G.scores.south;
-  document.getElementById("tag-n").innerText = playerNames.north.substring(0, 12);
-  document.getElementById("tag-s").innerText = playerNames.south.substring(0, 12);
+  document.getElementById("tag-n").innerText = playerNames.north;
+  document.getElementById("tag-s").innerText = playerNames.south;
   
   const label = document.getElementById("hud-turn-text");
   const glow = document.getElementById("turn-glow");
@@ -596,20 +583,24 @@ function syncLogicTo3DVisuals() {
   adviceBtn.style.display = (gameMode === "online" && G.currentPlayer !== myRole) || G.status !== "playing" ? "none" : "flex";
 
   if(G.status === "ended") {
-    label.innerText = "Combat Fini"; glow.style.backgroundColor = "var(--accent-gold)";
-    document.getElementById("end-title").innerText = `Victoire : ${playerNames[G.winner]}`;
-    document.getElementById("end-desc").innerText = `Scores Finaux — N : ${G.scores.north} | S : ${G.scores.south}`;
+    label.innerText = "Combat Clos"; glow.style.backgroundColor = "var(--accent-gold)";
+    document.getElementById("end-title").innerText = `Victoire de ${playerNames[G.winner]}`;
+    document.getElementById("end-desc").innerText = `SCORE FINAL — ${G.scores.north} VS ${G.scores.south}`;
     document.getElementById("end-modal").classList.add("active");
   } else {
     label.innerText = G.currentPlayer === "south" ? "Tour : Sud" : "Tour : Nord";
     glow.style.backgroundColor = G.currentPlayer === "south" ? "var(--accent-orange)" : "var(--accent-blue)";
   }
 
+  // Nettoyage complet des anciennes graines 3D
   while(seedsGroup.children.length > 0) { seedsGroup.remove(seedsGroup.children[0]); }
 
+  // Géométrie sous forme de cristal/gemme facettée très pro
   const gemGeo = new THREE.DodecahedronGeometry(0.12);
-  const copperMat = new THREE.MeshStandardMaterial({ color: 0xcd7f32, roughness: 0.2, metalness: 0.3 });
-  const goldMat = new THREE.MeshStandardMaterial({ color: 0xffb703, roughness: 0.1, metalness: 0.4 });
+  
+  // Matériaux physiques brillants (Cristal d'Or et de Jaspe Rouge)
+  const copperMat = new THREE.MeshStandardMaterial({ color: 0x9a2212, roughness: 0.15, metalness: 0.1, emissive: 0x220502 });
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.05, metalness: 0.8, emissive: 0x442200 });
   const legals = getLegalMoves(G);
 
   pits3D.forEach(pit => {
@@ -618,18 +609,30 @@ function syncLogicTo3DVisuals() {
     const isRecommended = recommendedMove && recommendedMove.p === player && recommendedMove.i === index;
     const isPlayable = legals.some(m => m.p === player && m.i === index) && G.status === "playing";
     
+    // Design et animation des halos de sélection
     if (isRecommended) {
-      ringMesh.material.color.setHex(0xf59e0b); ringMesh.material.opacity = 0.95; ringMesh.scale.setScalar(1.08);
+      ringMesh.material.color.setHex(0xfbbf24); ringMesh.material.opacity = 1.0; ringMesh.scale.setScalar(1.06);
     } else if (isPlayable && (gameMode === "local" || G.currentPlayer === myRole)) {
-      ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.65; ringMesh.scale.setScalar(1.04);
+      ringMesh.material.color.setHex(player === "north" ? 0x60a5fa : 0xf97316); ringMesh.material.opacity = 0.5; ringMesh.scale.setScalar(1.02);
     } else {
-      ringMesh.material.color.setHex(player === "north" ? 0x3b82f6 : 0xf97316); ringMesh.material.opacity = 0.12; ringMesh.scale.setScalar(1.0);
+      ringMesh.material.color.setHex(player === "north" ? 0x60a5fa : 0xf97316); ringMesh.material.opacity = 0.05; ringMesh.scale.setScalar(1.0);
     }
 
+    // Répartition naturelle et géométrique des cristaux dans les trous
     for(let k=0; k<count; k++) {
-      const gemMesh = new THREE.Mesh(gemGeo, k % 2 === 0 ? copperMat : goldMat);
-      const angle = k * 1.25; const radius = Math.min(0.35, 0.06 * k);
-      gemMesh.position.set(pit.position.x + Math.cos(angle)*radius, 1.28 + (Math.floor(k / 5)*0.11), pit.position.z + Math.sin(angle)*radius);
+      const gemMesh = new THREE.Mesh(gemGeo, k % 3 === 0 ? copperMat : goldMat);
+      const angle = k * 1.40; const radius = Math.min(0.34, 0.055 * k);
+      const targetY = 1.28 + (Math.floor(k / 5) * 0.10);
+      
+      gemMesh.position.set(
+        pit.position.x + Math.cos(angle) * radius,
+        targetY + 2.0, // On les fait apparaître un peu plus haut pour l'effet de chute
+        pit.position.z + Math.sin(angle) * radius
+      );
+      
+      // Petite animation d'apparition / chute de graine très pro
+      new TWEEN.Tween(gemMesh.position).to({ y: targetY }, 350 + (k*15)).easing(TWEEN.Easing.Bounce.Out).start();
+      gemMesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
       seedsGroup.add(gemMesh);
     }
   });
@@ -638,8 +641,7 @@ function syncLogicTo3DVisuals() {
 function handleAndroidTouchClick(e) {
   if(!G || G.status !== "playing") return;
   if(gameMode === "online" && G.currentPlayer !== myRole) return;
-
-  if (Date.now() - pointerStartTime > 220) return;
+  if (Date.now() - pointerStartTime > 200) return; // Évite les faux clics lors d'une rotation de caméra
 
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -649,7 +651,8 @@ function handleAndroidTouchClick(e) {
   if(intersects.length > 0) {
     const { player, index } = intersects[0].object.userData;
     if(player === G.currentPlayer && getLegalMoves(G).some(m => m.p === player && m.i === index)) {
-      new TWEEN.Tween(intersects[0].object.position).to({ y: 1.14 }, 80).yoyo(true).repeat(1).to({ y: 1.21 }, 80).start();
+      // Animation physique d'impact de la case cliquée (Effet ressort)
+      new TWEEN.Tween(intersects[0].object.position).to({ y: 1.12 }, 70).easing(TWEEN.Easing.Quadratic.Out).yoyo(true).repeat(1).to({ y: 1.20 }, 70).start();
       playMove(G, player, index); syncLogicTo3DVisuals();
       if(gameMode === "online" && ws) ws.send(JSON.stringify({ type: 'move', code: roomCode, move: { player, pitIndex: index } }));
     }
@@ -658,10 +661,13 @@ function handleAndroidTouchClick(e) {
 
 function animateFrameLoop() {
   requestAnimationFrame(animateFrameLoop); TWEEN.update(); controls.update();
+  
+  // Animation temporelle continue : Pulsation des néons au sol pour attirer l'œil
   if(G && G.status === "playing") {
+    const time = Date.now() * 0.004;
     pits3D.forEach(pit => {
       if (recommendedMove && recommendedMove.p === pit.userData.player && recommendedMove.i === pit.userData.index) {
-        pit.userData.ringMesh.material.opacity = 0.5 + Math.sin(Date.now() * 0.015) * 0.45;
+        pit.userData.ringMesh.material.opacity = 0.5 + Math.sin(time * 3) * 0.5;
       }
     });
   }
@@ -671,7 +677,7 @@ function animateFrameLoop() {
 function handleResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   const isMobile = window.innerWidth < 768;
-  if(isMobile) camera.position.set(0, 15, 4.3);
+  if(isMobile) camera.position.set(0, 14, 5.0);
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
