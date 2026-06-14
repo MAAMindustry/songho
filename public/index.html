@@ -514,7 +514,12 @@ function connectToNetworkTunnel(name) {
       syncLogicTo3DVisuals();
     } 
     else if(msg.type === 'move') {
-      animateSowing(G, msg.move.player, msg.move.pitIndex);
+      // Si ce coup est l'écho de notre propre move déjà animé localement, on l'ignore
+      if (pendingEchoSkip > 0 && msg.move.player === myRole) {
+        pendingEchoSkip--;
+      } else {
+        animateSowing(G, msg.move.player, msg.move.pitIndex);
+      }
     } 
     else if(msg.type === 'opponent_disconnected') {
       alert("L'adversaire a fui le combat."); 
@@ -562,6 +567,7 @@ let scene, camera, renderer, controls, pits3D = [], seedsGroup;
 let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
 let pointerStartTime = 0;
 let isAnimating = false;
+let pendingEchoSkip = 0;
 let pitMeshByKey = {};
 
 function initCore3DEngine() {
@@ -651,9 +657,14 @@ function pitWorldPos(player, idx, yOffset, seedIdx) {
 // ═══════════════════════════════════════════════════════
 // ANIMATION DYNAMIQUE DE PARTAGE DES GRAINES (SOWING)
 // ═══════════════════════════════════════════════════════
-function animateSowing(s, p, i) {
+function animateSowing(s, p, i, options = {}) {
   if (isAnimating) return;
   isAnimating = true;
+
+  if (options.skipNextEcho) {
+    pendingEchoSkip++;
+  }
+
 
   const plan = computeMovePlan(s, p, i);
   const sourceMesh = pitMeshByKey[p + "_" + i];
@@ -756,9 +767,14 @@ function animateSowing(s, p, i) {
   const totalDuration = (plan.seedsCount - 1) * stagger + hopDuration + 250 + (plan.captureTarget ? 500 : 0);
 
   setTimeout(() => {
-    playMove(s, p, i);
-    syncLogicTo3DVisuals();
-    isAnimating = false;
+    try {
+      playMove(s, p, i);
+      syncLogicTo3DVisuals();
+    } catch (err) {
+      console.error("Erreur lors de la finalisation du coup:", err);
+    } finally {
+      isAnimating = false;
+    }
   }, totalDuration);
 }
 
@@ -888,11 +904,12 @@ function handleAndroidTouchClick(e) {
     const { player, index } = intersects[0].object.userData;
     if(player === G.currentPlayer && getLegalMoves(G).some(m => m.p === player && m.i === index)) {
 
-      if(gameMode === "online" && ws) {
+      const isOnlineSend = gameMode === "online" && ws && ws.readyState === WebSocket.OPEN;
+      if(isOnlineSend) {
         ws.send(JSON.stringify({ type: 'move', code: roomCode, move: { player, pitIndex: index } }));
       }
 
-      animateSowing(G, player, index);
+      animateSowing(G, player, index, { skipNextEcho: isOnlineSend });
     }
   }
 }
