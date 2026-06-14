@@ -154,6 +154,18 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
   z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px;
 }
 .modal-overlay.active { display: flex; }
+
+/* Bannière de capture */
+.capture-banner {
+  position: absolute; top: 90px; left: 50%; transform: translateX(-50%) translateY(-20px) scale(0.9);
+  background: linear-gradient(135deg, rgba(251,191,36,0.95), rgba(249,115,22,0.95));
+  color: #1a0e02; font-weight: 800; font-size: 0.95rem; letter-spacing: 1px;
+  padding: 12px 28px; border-radius: 18px; z-index: 50; pointer-events: none;
+  box-shadow: 0 15px 35px rgba(251,191,36,0.35);
+  opacity: 0; transition: opacity 0.35s ease, transform 0.35s ease;
+  text-transform: uppercase; white-space: nowrap;
+}
+.capture-banner.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -245,6 +257,8 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
       </div>
     </div>
   </div>
+
+  <div class="capture-banner" id="capture-banner"></div>
 
   <div class="hud-bottom-bar">
     <button class="btn-action leave" onclick="exitToMainMenu()">🚪</button>
@@ -394,6 +408,34 @@ function playMove(s, p, i) {
   return true;
 }
 
+// Calcule le détail d'un coup SANS modifier l'état : utilisé pour préparer l'animation
+function computeMovePlan(s, p, i) {
+  const sim = JSON.parse(JSON.stringify(s));
+  let seeds = sim.board[p][i]; sim.board[p][i] = 0;
+  let curr = cycleIdx({p, i});
+  const path = []; // liste ordonnée des fosses visitées, une entrée par graine semée
+  let lastPos = null;
+
+  for(let k=0; k<seeds; k++) {
+    curr = (curr + 1) % 14;
+    const pos = CYCLE[curr];
+    sim.board[pos.p][pos.i]++;
+    path.push({ p: pos.p, i: pos.i });
+    if(k === seeds - 1) lastPos = pos;
+  }
+
+  let captureTarget = null, capturePts = 0;
+  if(lastPos && lastPos.p === other(p)) {
+    let pts = sim.board[lastPos.p][lastPos.i];
+    if([2,3,4].includes(pts)) {
+      const simBoard = [...sim.board[lastPos.p]]; simBoard[lastPos.i] = 0;
+      if(sum(simBoard) > 0) { captureTarget = lastPos; capturePts = pts; }
+    }
+  }
+
+  return { seedsCount: seeds, path, captureTarget, capturePts, sourcePos: {p, i} };
+}
+
 // ═══════════════════════════════════════════════════════
 // ROUTAGE RÉSEAU MULTIJOUEUR (CONNECTÉ)
 // ═══════════════════════════════════════════════════════
@@ -472,8 +514,7 @@ function connectToNetworkTunnel(name) {
       syncLogicTo3DVisuals();
     } 
     else if(msg.type === 'move') {
-      playMove(G, msg.move.player, msg.move.pitIndex); 
-      syncLogicTo3DVisuals();
+      animateSowing(G, msg.move.player, msg.move.pitIndex);
     } 
     else if(msg.type === 'opponent_disconnected') {
       alert("L'adversaire a fui le combat."); 
@@ -506,7 +547,7 @@ function requestStrategicAdvice() {
 }
 
 function triggerUndoAction() {
-  if (undoHistory.length > 0 && G && G.status === "playing" && gameMode === "local") { 
+  if (undoHistory.length > 0 && G && G.status === "playing" && gameMode === "local" && !isAnimating) { 
     G = undoHistory.pop(); 
     recommendedMove = null; 
     syncLogicTo3DVisuals(); 
@@ -520,10 +561,12 @@ function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close
 let scene, camera, renderer, controls, pits3D = [], seedsGroup;
 let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
 let pointerStartTime = 0;
+let isAnimating = false;
+let pitMeshByKey = {};
 
 function initCore3DEngine() {
   const container = document.getElementById("canvas-container");
-  container.innerHTML = ""; pits3D = [];
+  container.innerHTML = ""; pits3D = []; pitMeshByKey = {};
   scene = new THREE.Scene(); 
    
   scene.fog = new THREE.FogExp2(0x0a0502, 0.035);
@@ -591,6 +634,178 @@ function createPremiumPit(player, idx, x, z) {
   const ring = new THREE.Mesh(ringGeo, ringMat); ring.rotation.x = Math.PI / 2; ring.position.set(x, 1.26, z); scene.add(ring);
 
   mesh.userData = { player, index: idx, ringMesh: ring }; pits3D.push(mesh);
+  pitMeshByKey[player + "_" + idx] = mesh;
+}
+
+function pitWorldPos(player, idx, yOffset, seedIdx) {
+  const mesh = pitMeshByKey[player + "_" + idx];
+  const angle = (seedIdx || 0) * 1.40;
+  const radius = Math.min(0.34, 0.055 * (seedIdx || 0));
+  return new THREE.Vector3(
+    mesh.position.x + Math.cos(angle) * radius,
+    1.28 + yOffset,
+    mesh.position.z + Math.sin(angle) * radius
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// ANIMATION DYNAMIQUE DE PARTAGE DES GRAINES (SOWING)
+// ═══════════════════════════════════════════════════════
+function animateSowing(s, p, i) {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  const plan = computeMovePlan(s, p, i);
+  const sourceMesh = pitMeshByKey[p + "_" + i];
+  const sourceCount = s.board[p][i];
+
+  // Petit "tape" sur la fosse source pour signaler le départ
+  new TWEEN.Tween(sourceMesh.position).to({ y: 1.12 }, 80).easing(TWEEN.Easing.Quadratic.Out)
+    .yoyo(true).repeat(1).to({ y: 1.20 }, 80).start();
+
+  const gemGeo = new THREE.DodecahedronGeometry(0.12);
+  const copperMat = new THREE.MeshStandardMaterial({ color: 0x9a2212, roughness: 0.15, metalness: 0.1, emissive: 0x220502 });
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.05, metalness: 0.8, emissive: 0x442200 });
+  const sourcePos3D = sourceMesh.position;
+
+  // Compteur de graines visuel par fosse (indépendant de G, pour positionner chaque graine animée)
+  const visualCounts = {};
+  for(const key in pitMeshByKey) {
+    const [pl, idx] = key.split("_");
+    visualCounts[key] = s.board[pl][idx];
+  }
+  visualCounts[p + "_" + i] = 0;
+
+  const hopDuration = 260; // durée d'un saut entre deux fosses
+  const stagger = 90;      // décalage entre le départ de chaque graine
+  let captureFired = false;
+
+  // Crée et anime chaque graine voyageant le long du chemin complet (path)
+  for(let k = 0; k < plan.seedsCount; k++) {
+    const mat = k % 3 === 0 ? copperMat : goldMat;
+    const gem = new THREE.Mesh(gemGeo, mat);
+    gem.position.copy(sourcePos3D);
+    gem.position.y = 1.55;
+    gem.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+    seedsGroup.add(gem);
+
+    const seedPath = plan.path.slice(0, k + 1); // une graine ne traverse que jusqu'à sa fosse d'arrivée finale, mais visuellement on ne saute que vers la fosse finale de CETTE graine
+    const finalStop = plan.path[k];
+    const startDelay = k * stagger;
+
+    // Chaque graine vole directement de la fosse source vers SA fosse de destination,
+    // en passant par un arc (sauts successifs visuellement groupés pour un rendu fluide et dynamique)
+    setTimeout(() => {
+      const destKey = finalStop.p + "_" + finalStop.i;
+      const seedIdxAtDest = visualCounts[destKey];
+      visualCounts[destKey] = seedIdxAtDest + 1;
+      const target = pitWorldPos(finalStop.p, finalStop.i, Math.floor(seedIdxAtDest / 5) * 0.10, seedIdxAtDest);
+
+      // Hauteur de l'arc proportionnelle à la distance pour un effet "lancer" dynamique
+      const dist = sourcePos3D.distanceTo(target);
+      const arcHeight = 1.1 + dist * 0.08;
+      const midPoint = {
+        x: (sourcePos3D.x + target.x) / 2,
+        y: target.y + arcHeight,
+        z: (sourcePos3D.z + target.z) / 2
+      };
+
+      // Trajectoire en deux temps : montée/translation vers le sommet de l'arc, puis chute avec rebond
+      new TWEEN.Tween(gem.position)
+        .to(midPoint, hopDuration * 0.55)
+        .easing(TWEEN.Easing.Cubic.Out)
+        .onComplete(() => {
+          new TWEEN.Tween(gem.position)
+            .to(target, hopDuration * 0.45)
+            .easing(TWEEN.Easing.Bounce.Out)
+            .start();
+        })
+        .start();
+
+      // Rotation continue pendant le vol pour un effet "gemme étincelante"
+      new TWEEN.Tween(gem.rotation)
+        .to({ x: gem.rotation.x + Math.PI * 2, y: gem.rotation.y + Math.PI * 2 }, hopDuration)
+        .start();
+
+      // Flash bref de l'anneau de la fosse d'arrivée à l'atterrissage
+      setTimeout(() => {
+        const destMesh = pitMeshByKey[destKey];
+        if (destMesh) {
+          const ring = destMesh.userData.ringMesh;
+          const baseOpacity = ring.material.opacity;
+          const baseColor = ring.material.color.getHex();
+          ring.material.color.setHex(0xffffff);
+          ring.material.opacity = 0.9;
+          new TWEEN.Tween(ring.material)
+            .to({ opacity: baseOpacity }, 350)
+            .easing(TWEEN.Easing.Quadratic.Out)
+            .onComplete(() => ring.material.color.setHex(baseColor))
+            .start();
+        }
+      }, hopDuration);
+
+      // Si cette graine est la dernière du chemin et provoque une capture, déclenche l'effet capture
+      if (k === plan.seedsCount - 1 && plan.captureTarget && !captureFired) {
+        captureFired = true;
+        setTimeout(() => triggerCaptureEffect(plan.captureTarget, plan.capturePts, s.currentPlayer === "south" ? "south" : "north"), hopDuration + 60);
+      }
+    }, startDelay);
+  }
+
+  // Temps total avant de finaliser l'état logique et resynchroniser la scène
+  const totalDuration = (plan.seedsCount - 1) * stagger + hopDuration + 250 + (plan.captureTarget ? 500 : 0);
+
+  setTimeout(() => {
+    playMove(s, p, i);
+    syncLogicTo3DVisuals();
+    isAnimating = false;
+  }, totalDuration);
+}
+
+function triggerCaptureEffect(target, pts, capturingPlayer) {
+  const destMesh = pitMeshByKey[target.p + "_" + target.i];
+  if (!destMesh) return;
+
+  // Pulsation dorée intense de l'anneau capturé
+  const ring = destMesh.userData.ringMesh;
+  const baseColor = ring.material.color.getHex();
+  ring.material.color.setHex(0xfbbf24);
+  ring.material.opacity = 1.0;
+  new TWEEN.Tween(ring.scale).to({ x: 1.35, y: 1.35, z: 1.35 }, 220).easing(TWEEN.Easing.Quadratic.Out)
+    .onComplete(() => {
+      new TWEEN.Tween(ring.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 280).easing(TWEEN.Easing.Elastic.Out).start();
+    }).start();
+  new TWEEN.Tween(ring.material).to({ opacity: 0.05 }, 600).delay(150)
+    .onComplete(() => ring.material.color.setHex(baseColor)).start();
+
+  // Petite explosion de particules dorées au-dessus de la fosse capturée
+  const gemGeo = new THREE.DodecahedronGeometry(0.09);
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.05, metalness: 0.9, emissive: 0x553300 });
+  const origin = pitWorldPos(target.p, target.i, 0.3, 0);
+
+  for(let k=0; k<8; k++) {
+    const particle = new THREE.Mesh(gemGeo, goldMat);
+    particle.position.copy(origin);
+    seedsGroup.add(particle);
+    const angle = (k / 8) * Math.PI * 2;
+    const radius = 0.6 + Math.random() * 0.3;
+    const dest = {
+      x: origin.x + Math.cos(angle) * radius,
+      y: origin.y + 0.7 + Math.random() * 0.4,
+      z: origin.z + Math.sin(angle) * radius
+    };
+    new TWEEN.Tween(particle.position).to(dest, 380).easing(TWEEN.Easing.Cubic.Out)
+      .onComplete(() => {
+        new TWEEN.Tween(particle.position).to({ y: particle.position.y - 1.2 }, 320).easing(TWEEN.Easing.Quadratic.In)
+          .onComplete(() => seedsGroup.remove(particle)).start();
+      }).start();
+  }
+
+  // Bannière "+N CAPTURÉ" en haut de l'écran
+  const banner = document.getElementById("capture-banner");
+  banner.innerText = `⚡ ${playerNames[capturingPlayer]} CAPTURE ${pts} GRAINES !`;
+  banner.classList.add("show");
+  setTimeout(() => banner.classList.remove("show"), 1300);
 }
 
 function syncLogicTo3DVisuals() {
@@ -660,7 +875,7 @@ function syncLogicTo3DVisuals() {
 }
 
 function handleAndroidTouchClick(e) {
-  if(!G || G.status !== "playing") return;
+  if(!G || G.status !== "playing" || isAnimating) return;
   if(gameMode === "online" && G.currentPlayer !== myRole) return; 
   if (Date.now() - pointerStartTime > 200) return;
 
@@ -672,14 +887,12 @@ function handleAndroidTouchClick(e) {
   if(intersects.length > 0) {
     const { player, index } = intersects[0].object.userData;
     if(player === G.currentPlayer && getLegalMoves(G).some(m => m.p === player && m.i === index)) {
-      new TWEEN.Tween(intersects[0].object.position).to({ y: 1.12 }, 70).easing(TWEEN.Easing.Quadratic.Out).yoyo(true).repeat(1).to({ y: 1.20 }, 70).start();
-       
-      playMove(G, player, index); 
-      syncLogicTo3DVisuals();
-       
+
       if(gameMode === "online" && ws) {
         ws.send(JSON.stringify({ type: 'move', code: roomCode, move: { player, pitIndex: index } }));
       }
+
+      animateSowing(G, player, index);
     }
   }
 }
