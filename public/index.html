@@ -517,6 +517,9 @@ function connectToNetworkTunnel(name) {
       // Si ce coup est l'écho de notre propre move déjà animé localement, on l'ignore
       if (pendingEchoSkip > 0 && msg.move.player === myRole) {
         pendingEchoSkip--;
+      } else if (isAnimating) {
+        // Une animation est déjà en cours : on mémorise ce coup pour le traiter juste après
+        incomingMoveQueue.push(msg.move);
       } else {
         animateSowing(G, msg.move.player, msg.move.pitIndex);
       }
@@ -568,6 +571,7 @@ let raycaster = new THREE.Raycaster(); let mouse = new THREE.Vector2();
 let pointerStartTime = 0;
 let isAnimating = false;
 let pendingEchoSkip = 0;
+let incomingMoveQueue = [];
 let pitMeshByKey = {};
 
 function initCore3DEngine() {
@@ -659,6 +663,13 @@ function pitWorldPos(player, idx, yOffset, seedIdx) {
 // ═══════════════════════════════════════════════════════
 function animateSowing(s, p, i, options = {}) {
   if (isAnimating) return;
+  if (!s || s.status !== "playing") return;
+  // Sécurité : si le coup ne correspond plus à l'état courant (désync improbable mais possible),
+  // on resynchronise simplement l'affichage sans planter.
+  if (s.currentPlayer !== p || !(s.board[p][i] > 0)) {
+    syncLogicTo3DVisuals();
+    return;
+  }
   isAnimating = true;
 
   if (options.skipNextEcho) {
@@ -774,6 +785,11 @@ function animateSowing(s, p, i, options = {}) {
       console.error("Erreur lors de la finalisation du coup:", err);
     } finally {
       isAnimating = false;
+      // Traite le prochain coup adverse reçu pendant cette animation, s'il y en a un
+      if (incomingMoveQueue.length > 0) {
+        const nextMove = incomingMoveQueue.shift();
+        animateSowing(G, nextMove.player, nextMove.pitIndex);
+      }
     }
   }, totalDuration);
 }
