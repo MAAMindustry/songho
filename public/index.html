@@ -112,6 +112,24 @@ body, html {
 h1 { font-size: 1.9rem; font-weight: 800; margin-bottom: 1.8rem; letter-spacing: -0.5px; }
 h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
+.btn-rules {
+  position: absolute; top: 1.4rem; right: 1.4rem;
+  width: 38px; height: 38px; border-radius: 12px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  color: var(--text-primary); font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-rules:active { transform: scale(0.92); }
+
+/* Modale des règles */
+.rules-content { text-align: left; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+.rules-content h3 { font-size: 0.95rem; color: var(--accent-gold); margin: 1rem 0 0.4rem; letter-spacing: 0.5px; }
+.rules-content h3:first-child { margin-top: 0; }
+.rules-content p, .rules-content li { font-size: 0.85rem; color: var(--text-primary); line-height: 1.5; opacity: 0.9; }
+.rules-content ul { margin: 0.3rem 0 0.3rem 1.1rem; }
+.rules-content li { margin-bottom: 0.25rem; }
+
 .mode-tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 16px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.03); }
 .mode-tab { flex: 1; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.82rem; color: var(--text-muted); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
 .mode-tab.active { background: #fff; color: #030408; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
@@ -243,6 +261,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 
 <div id="screen-lobby" class="screen">
   <div class="glass-panel">
+    <button class="btn-rules" onclick="openRulesModal()" title="Règles du jeu">📜</button>
     <h1>SONGHO <span>AFRICA</span></h1>
      
     <div class="mode-tabs">
@@ -317,6 +336,42 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
     <h2 id="end-title" style="font-size:1.6rem; margin-bottom:0.5rem;">Fin du Combat</h2>
     <p id="end-desc" style="color:var(--text-muted); font-size:0.88rem; margin-bottom:2rem; font-family:'Space Mono';"></p>
     <button class="btn-premium" onclick="location.reload()" style="background:var(--accent-gold); color:#000;">Retour au Village</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="rules-modal">
+  <div class="glass-panel" style="max-width:460px; text-align:left;">
+    <h2 style="font-size:1.4rem; margin-bottom:1rem; text-align:center;">📜 Règles du <span style="color:var(--accent-gold);">Songho</span></h2>
+    <div class="rules-content">
+      <h3>But du jeu</h3>
+      <p>Le Songho est un jeu de semailles ancestral africain. Chaque joueur possède une rangée de 7 fosses contenant chacune 5 graines au départ. Le but est de capturer le plus de graines possible.</p>
+
+      <h3>Déroulement d'un tour</h3>
+      <ul>
+        <li>À ton tour, choisis une de tes fosses contenant au moins une graine.</li>
+        <li>Les graines sont distribuées une par une dans les fosses suivantes, en suivant le sens du parcours (de ta rangée vers celle de l'adversaire, puis retour).</li>
+        <li>La fosse de départ se vide entièrement.</li>
+      </ul>
+
+      <h3>Capturer des graines</h3>
+      <ul>
+        <li>Si la dernière graine semée tombe dans une fosse adverse contenant alors 2, 3 ou 4 graines, tu captures toutes les graines de cette fosse.</li>
+        <li>Une capture n'est valable que si elle laisse au moins une graine à l'adversaire.</li>
+      </ul>
+
+      <h3>Coup obligatoire</h3>
+      <p>Si l'adversaire n'a plus aucune graine, tu dois, si possible, jouer un coup qui lui en redonne au moins une.</p>
+
+      <h3>Fin de la partie</h3>
+      <ul>
+        <li>La partie se termine quand un joueur atteint 40 graines capturées, ou quand il reste moins de 10 graines au total sur le plateau.</li>
+        <li>Le joueur avec le plus de graines capturées remporte le combat.</li>
+      </ul>
+
+      <h3>Astuces</h3>
+      <p>Utilise le bouton 💡 Stratégie pour obtenir une suggestion de coup capturant le plus de graines possible.</p>
+    </div>
+    <button class="btn-premium" onclick="closeRulesModal()" style="margin-top:1.5rem;">Compris !</button>
   </div>
 </div>
 
@@ -485,6 +540,13 @@ function computeMovePlan(s, p, i) {
 let gameMode = "local"; let onlineAction = "create";
 let G = null; let myRole = "south"; let roomCode = null; let ws = null;
 let playerNames = { north: "Nord", south: "Sud" };
+
+function openRulesModal() {
+  document.getElementById("rules-modal").classList.add("active");
+}
+function closeRulesModal() {
+  document.getElementById("rules-modal").classList.remove("active");
+}
 
 function switchMode(m) {
   gameMode = m;
