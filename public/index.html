@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-<title>Songo 3D — Édition Élite Africaine</title>
+<title>Songho Africa — Édition Élite Africaine</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
@@ -40,7 +40,12 @@ body, html {
 #screen-loading {
   position: fixed; inset: 0; z-index: 999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: radial-gradient(circle at center, #130a04 0%, #030408 100%);
+  background-color: #06070c;
+  background-image:
+    radial-gradient(circle at center, rgba(217,119,6,0.18) 0%, rgba(3,4,8,0.92) 70%),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><g fill="none" stroke="rgba(251,191,36,0.09)" stroke-width="2"><path d="M120 10 L230 120 L120 230 L10 120 Z"/><path d="M120 50 L190 120 L120 190 L50 120 Z"/><path d="M0 0 L60 60 L0 120 M240 0 L180 60 L240 120 M0 240 L60 180 L0 120 M240 240 L180 180 L240 120" /><path d="M120 0 C 160 40, 160 80, 120 120 C 80 160, 80 200, 120 240" stroke="rgba(96,165,250,0.06)"/><path d="M0 120 C 40 160, 80 160, 120 120 C 160 80, 200 80, 240 120" stroke="rgba(96,165,250,0.06)"/></g></svg>');
+  background-size: cover, 240px 240px;
+  background-repeat: no-repeat, repeat;
   opacity: 1;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
 }
@@ -73,11 +78,24 @@ body, html {
 }
 .loader-status { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
+.maam-badge {
+  position: absolute; bottom: 28px; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+  color: #ec4899; letter-spacing: 0.3px;
+}
+.maam-badge strong { font-weight: 800; }
+
 /* Écrans de menu en Glassmorphism moderne */
 .screen {
   position: absolute; inset: 0; z-index: 100;
   display: none; flex-direction: column; align-items: center; justify-content: center;
-  background: radial-gradient(circle at center, rgba(3,4,8,0.3) 0%, rgba(3,4,8,0.85) 100%);
+  background-color: #06070c;
+  background-image:
+    radial-gradient(circle at center, rgba(3,4,8,0.35) 0%, rgba(3,4,8,0.88) 100%),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><g fill="none" stroke="rgba(251,191,36,0.10)" stroke-width="2"><path d="M120 10 L230 120 L120 230 L10 120 Z"/><path d="M120 50 L190 120 L120 190 L50 120 Z"/><path d="M0 0 L60 60 L0 120 M240 0 L180 60 L240 120 M0 240 L60 180 L0 120 M240 240 L180 180 L240 120" /><path d="M120 0 C 160 40, 160 80, 120 120 C 80 160, 80 200, 120 240" stroke="rgba(96,165,250,0.07)"/><path d="M0 120 C 40 160, 80 160, 120 120 C 160 80, 200 80, 240 120" stroke="rgba(96,165,250,0.07)"/></g></svg>');
+  background-size: cover, 240px 240px;
+  background-repeat: no-repeat, repeat;
   backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 20px;
 }
 .screen.active { display: flex; }
@@ -115,7 +133,24 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 }
 .btn-premium:active { transform: scale(0.98); }
 
-#canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; background: #030408; }
+#cultural-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background-color: #06070c;
+  background-image:
+    radial-gradient(circle at 20% 25%, rgba(217,119,6,0.10) 0%, transparent 45%),
+    radial-gradient(circle at 80% 75%, rgba(96,165,250,0.08) 0%, transparent 45%),
+    repeating-linear-gradient(135deg, transparent 0px, transparent 78px, rgba(251,191,36,0.045) 78px, rgba(251,191,36,0.045) 80px, transparent 80px, transparent 158px, rgba(251,191,36,0.045) 158px, rgba(251,191,36,0.045) 160px),
+    repeating-linear-gradient(45deg, transparent 0px, transparent 78px, rgba(96,165,250,0.03) 78px, rgba(96,165,250,0.03) 80px, transparent 80px, transparent 158px, rgba(96,165,250,0.03) 158px, rgba(96,165,250,0.03) 160px);
+}
+#cultural-bg::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><g fill="none" stroke="rgba(251,191,36,0.07)" stroke-width="2"><path d="M120 10 L230 120 L120 230 L10 120 Z"/><path d="M120 50 L190 120 L120 190 L50 120 Z"/><path d="M0 0 L60 60 L0 120 M240 0 L180 60 L240 120 M0 240 L60 180 L0 120 M240 240 L180 180 L240 120" /><path d="M120 0 C 160 40, 160 80, 120 120 C 80 160, 80 200, 120 240" stroke="rgba(96,165,250,0.05)"/><path d="M0 120 C 40 160, 80 160, 120 120 C 160 80, 200 80, 240 120" stroke="rgba(96,165,250,0.05)"/></g></svg>');
+  background-repeat: repeat;
+  background-size: 240px 240px;
+  opacity: 0.9;
+}
+
+#canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; background: transparent; }
 
 /* HUD DE JEU MODERNISÉ */
 .hud-container {
@@ -188,19 +223,27 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
         <path d="M17 11C15.5 11 14.5 12 14.5 13.5C14.5 15 15.5 15.5 17 15.5" stroke="#f97316" stroke-width="1.5"/>
       </svg>
     </div>
-    <div class="loader-title">SONGO <span>3D ÉLITE</span></div>
+    <div class="loader-title">SONGHO <span>AFRICA</span></div>
     <div class="loader-bar-container">
       <div class="loader-bar-progress" id="loading-progress"></div>
     </div>
     <div class="loader-status" id="loading-text">Rituel du village...</div>
   </div>
+  <div class="maam-badge">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="12" cy="12" rx="11" ry="6.5" stroke="#ec4899" stroke-width="2"/>
+      <circle cx="12" cy="12" r="3.2" fill="#ec4899"/>
+    </svg>
+    <span>from <strong>MAAM Industry</strong></span>
+  </div>
 </div>
 
+<div id="cultural-bg"></div>
 <div id="canvas-container"></div>
 
 <div id="screen-lobby" class="screen">
   <div class="glass-panel">
-    <h1>SONGO <span>AFRICA</span></h1>
+    <h1>SONGHO <span>AFRICA</span></h1>
      
     <div class="mode-tabs">
       <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">Session Locale</div>
@@ -209,7 +252,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 
     <div class="input-group">
       <label>Votre Pseudo</label>
-      <input id="input-name" class="input-style" type="text" value="Guerrier_Songo" maxlength="12">
+      <input id="input-name" class="input-style" type="text" value="Guerrier_Songho" maxlength="12">
     </div>
 
     <div id="online-configuration" style="display:none; flex-direction:column; gap:10px;">
@@ -326,7 +369,7 @@ function runFakeLoader() {
 window.addEventListener('DOMContentLoaded', runFakeLoader);
 
 // ═══════════════════════════════════════════════════════
-// LOGIQUE DU JEU SONGO
+// LOGIQUE DU JEU SONGHO
 // ═══════════════════════════════════════════════════════
 const CYCLE = [
   {p:"north",i:0},{p:"north",i:1},{p:"north",i:2},{p:"north",i:3},{p:"north",i:4},{p:"north",i:5},{p:"north",i:6},
@@ -574,6 +617,102 @@ let pendingEchoSkip = 0;
 let incomingMoveQueue = [];
 let pitMeshByKey = {};
 
+// Génère une texture procédurale gravée de motifs géométriques beti
+// (losanges emboîtés "ezimi", triangles opposés "etun akong", lignes sinusoïdales)
+// pour orner le dessus du banc de jeu.
+function createBenchTopTexture() {
+  const size = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Fond bois sombre avec léger dégradé
+  const bgGrad = ctx.createLinearGradient(0, 0, size, size);
+  bgGrad.addColorStop(0, '#2a160d');
+  bgGrad.addColorStop(0.5, '#22120b');
+  bgGrad.addColorStop(1, '#1c0f08');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, size, size);
+
+  // Veines de bois subtiles
+  ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+  ctx.lineWidth = 2;
+  for(let y = -size; y < size * 2; y += 26) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    for(let x = 0; x <= size; x += 64) {
+      ctx.lineTo(x, y + Math.sin(x * 0.01 + y * 0.05) * 10);
+    }
+    ctx.stroke();
+  }
+
+  const cell = size / 4; // grille 4x4 de motifs répétés
+
+  function drawDiamondMotif(cx, cy, r) {
+    // Losanges emboîtés (motif ezimi)
+    ctx.strokeStyle = 'rgba(251,191,36,0.55)';
+    ctx.lineWidth = 4;
+    [1, 0.6].forEach((scale, idx) => {
+      ctx.globalAlpha = idx === 0 ? 0.55 : 0.85;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - r * scale);
+      ctx.lineTo(cx + r * scale, cy);
+      ctx.lineTo(cx, cy + r * scale);
+      ctx.lineTo(cx - r * scale, cy);
+      ctx.closePath();
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function drawOpposedTriangles(cx, cy, r) {
+    // Triangles opposés par leur sommet (motif etun akong)
+    ctx.strokeStyle = 'rgba(96,165,250,0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy - r); ctx.lineTo(cx, cy); ctx.closePath(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - r, cy + r); ctx.lineTo(cx + r, cy + r); ctx.lineTo(cx, cy); ctx.closePath(); ctx.stroke();
+  }
+
+  function drawSineCurves(x0, y0, w, h) {
+    // Lignes sinusoïdales (motif caméléon) le long du bord
+    ctx.strokeStyle = 'rgba(251,191,36,0.30)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for(let x = 0; x <= w; x += 4) {
+      const yy = y0 + Math.sin((x / w) * Math.PI * 2) * (h * 0.18);
+      if(x === 0) ctx.moveTo(x0 + x, yy); else ctx.lineTo(x0 + x, yy);
+    }
+    ctx.stroke();
+  }
+
+  // Grille répétée de losanges + triangles
+  for(let row = 0; row < 4; row++) {
+    for(let col = 0; col < 4; col++) {
+      const cx = col * cell + cell / 2;
+      const cy = row * cell + cell / 2;
+      drawDiamondMotif(cx, cy, cell * 0.32);
+      drawOpposedTriangles(cx, cy, cell * 0.14);
+    }
+  }
+
+  // Bandes sinusoïdales horizontales en haut et en bas (bordures du banc)
+  drawSineCurves(0, size * 0.06, size, size * 0.06);
+  drawSineCurves(0, size * 0.94, size, size * 0.06);
+
+  // Cadre extérieur doré
+  ctx.strokeStyle = 'rgba(251,191,36,0.5)';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(20, 20, size - 40, size - 40);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 4;
+  return texture;
+}
+
 function initCore3DEngine() {
   const container = document.getElementById("canvas-container");
   container.innerHTML = ""; pits3D = []; pitMeshByKey = {};
@@ -586,7 +725,8 @@ function initCore3DEngine() {
   if(isMobile) camera.position.set(0, 14, 5.0);
   else camera.position.set(0, 11, 11.0);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: false });
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: true });
+  renderer.setClearColor(0x000000, 0);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -611,8 +751,13 @@ function initCore3DEngine() {
     color: 0x22120b, roughness: 0.45, metalness: 0.1,
     emissive: 0x050201, roughnessMap: null
   });
+
+  const benchTopMaterial = new THREE.MeshStandardMaterial({
+    map: createBenchTopTexture(), color: 0xffffff,
+    roughness: 0.4, metalness: 0.15, emissive: 0x050201
+  });
    
-  const topMesh = new THREE.Mesh(new THREE.BoxGeometry(16.0, 0.5, 4.6), woodMaterial); topMesh.position.y = 1.0; benchGroup.add(topMesh);
+  const topMesh = new THREE.Mesh(new THREE.BoxGeometry(16.0, 0.5, 4.6), benchTopMaterial); topMesh.position.y = 1.0; benchGroup.add(topMesh);
   const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 4.2), woodMaterial); leftLeg.position.set(-7.2, 0.5, 0); benchGroup.add(leftLeg);
   const rightLeg = leftLeg.clone(); rightLeg.position.x = 7.2; benchGroup.add(rightLeg);
   scene.add(benchGroup);
