@@ -107,6 +107,7 @@ body, html {
   width: 100%; max-width: 400px; text-align: center;
   box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255,255,255,0.1);
   position: relative;
+  max-height: 92vh; overflow-y: auto;
 }
 
 h1 { font-size: 1.9rem; font-weight: 800; margin-bottom: 1.8rem; letter-spacing: -0.5px; }
@@ -131,7 +132,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 .rules-content li { margin-bottom: 0.25rem; }
 
 .mode-tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 16px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.03); }
-.mode-tab { flex: 1; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.82rem; color: var(--text-muted); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.mode-tab { flex: 1; padding: 12px 6px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.78rem; color: var(--text-muted); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; }
 .mode-tab.active { background: #fff; color: #030408; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
 
 .input-group { display: flex; flex-direction: column; text-align: left; gap: 8px; margin-bottom: 1.5rem; }
@@ -142,6 +143,15 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
   transition: border-color 0.2s;
 }
 .input-style:focus { border-color: var(--accent-gold); }
+
+.difficulty-row { display: flex; gap: 8px; }
+.difficulty-pill {
+  flex: 1; padding: 12px 6px; border-radius: 12px; cursor: pointer; text-align: center;
+  font-weight: 700; font-size: 0.75rem; color: var(--text-muted);
+  background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+}
+.difficulty-pill.active { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); color: #1a0e02; border-color: transparent; }
 
 .btn-premium {
   background: #fff; color: #030408; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.3px;
@@ -263,19 +273,48 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
   <div class="glass-panel">
     <button class="btn-rules" onclick="openRulesModal()" title="Règles du jeu">📜</button>
     <h1>SONGHO <span>AFRICA</span></h1>
-     
+
     <div class="mode-tabs">
-      <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">Session Locale</div>
-      <div class="mode-tab" id="tab-online" onclick="switchMode('online')">Arène En Ligne</div>
+      <div class="mode-tab active" id="tab-local" onclick="switchMode('local')">2 Joueurs</div>
+      <div class="mode-tab" id="tab-ai" onclick="switchMode('ai')">Vs IA</div>
+      <div class="mode-tab" id="tab-online" onclick="switchMode('online')">En Ligne</div>
     </div>
 
-    <div class="input-group">
-      <label>Votre Pseudo</label>
-      <input id="input-name" class="input-style" type="text" value="Guerrier_Songho" maxlength="12">
+    <!-- Mode local : 2 joueurs sur le même appareil -->
+    <div id="local-configuration">
+      <div class="input-group">
+        <label>Pseudo Joueur Sud (commence)</label>
+        <input id="input-name-south" class="input-style" type="text" value="Guerrier_Songho" maxlength="14">
+      </div>
+      <div class="input-group">
+        <label>Pseudo Joueur Nord</label>
+        <input id="input-name-north" class="input-style" type="text" value="Challenger" maxlength="14">
+      </div>
     </div>
 
-    <div id="online-configuration" style="display:none; flex-direction:column; gap:10px;">
-      <div class="mode-tabs" style="margin-bottom: 0.5rem;">
+    <!-- Mode vs IA -->
+    <div id="ai-configuration" style="display:none;">
+      <div class="input-group">
+        <label>Votre Pseudo</label>
+        <input id="input-name-ai" class="input-style" type="text" value="Guerrier_Songho" maxlength="14">
+      </div>
+      <div class="input-group">
+        <label>Difficulté de l'IA</label>
+        <div class="difficulty-row">
+          <div class="difficulty-pill active" id="diff-easy" onclick="setAiDifficulty('easy')">Facile</div>
+          <div class="difficulty-pill" id="diff-medium" onclick="setAiDifficulty('medium')">Moyen</div>
+          <div class="difficulty-pill" id="diff-hard" onclick="setAiDifficulty('hard')">Difficile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode en ligne -->
+    <div id="online-configuration" style="display:none;">
+      <div class="input-group">
+        <label>Votre Pseudo</label>
+        <input id="input-name-online" class="input-style" type="text" value="Guerrier_Songho" maxlength="14">
+      </div>
+      <div class="mode-tabs" style="margin-bottom: 1.5rem;">
         <div class="mode-tab active" id="action-create" onclick="switchOnlineAction('create')">Créer</div>
         <div class="mode-tab" id="action-join" onclick="switchOnlineAction('join')">Rejoindre</div>
       </div>
@@ -475,6 +514,32 @@ function evaluateMoveCapture(s, p, i) {
   return captured;
 }
 
+// Simule un coup complet et retourne l'état résultant + les points capturés par "p"
+// (utilisé par l'IA pour évaluer les coups sans toucher à l'état réel du jeu)
+function simulateFullMove(s, p, i) {
+  const sim = JSON.parse(JSON.stringify(s));
+  let seeds = sim.board[p][i]; sim.board[p][i] = 0;
+  let curr = cycleIdx({p, i});
+  let lastPos = null;
+
+  for(let k=0; k<seeds; k++) {
+    curr = (curr + 1) % 14; sim.board[CYCLE[curr].p][CYCLE[curr].i]++;
+    if(k === seeds - 1) lastPos = CYCLE[curr];
+  }
+
+  let captured = 0;
+  if(lastPos && lastPos.p === other(p)) {
+    let pts = sim.board[lastPos.p][lastPos.i];
+    if([2,3,4].includes(pts)) {
+      const simBoard = [...sim.board[lastPos.p]]; simBoard[lastPos.i] = 0;
+      if(sum(simBoard) > 0) { sim.board[lastPos.p][lastPos.i] = 0; sim.scores[p] += pts; captured = pts; }
+    }
+  }
+
+  sim.currentPlayer = other(p);
+  return { sim, captured };
+}
+
 function playMove(s, p, i) {
   saveStateToHistory(s);
   recommendedMove = null;
@@ -535,6 +600,87 @@ function computeMovePlan(s, p, i) {
 }
 
 // ═══════════════════════════════════════════════════════
+// INTELLIGENCE ARTIFICIELLE (MODE VS IA)
+// ═══════════════════════════════════════════════════════
+let aiDifficulty = "easy";
+let aiPlayerRole = "north"; // l'IA joue toujours Nord en mode vs IA
+
+function setAiDifficulty(level) {
+  aiDifficulty = level;
+  ["easy","medium","hard"].forEach(l => {
+    document.getElementById("diff-" + l).classList.toggle("active", l === level);
+  });
+}
+
+// Choisit le meilleur coup pour le joueur "p" selon la difficulté demandée
+function chooseAiMove(s, p, difficulty) {
+  const legals = getLegalMoves(s);
+  if (legals.length === 0) return null;
+
+  if (difficulty === "easy") {
+    // Facile : coup aléatoire, avec une légère préférence pour une capture immédiate si elle existe
+    const capturing = legals.filter(m => evaluateMoveCapture(s, m.p, m.i) > 0);
+    if (capturing.length > 0 && Math.random() < 0.5) {
+      return capturing[Math.floor(Math.random() * capturing.length)];
+    }
+    return legals[Math.floor(Math.random() * legals.length)];
+  }
+
+  if (difficulty === "medium") {
+    // Moyen : maximise la capture immédiate, sinon coup aléatoire raisonnable
+    let best = null, bestScore = -1;
+    legals.forEach(m => {
+      const c = evaluateMoveCapture(s, m.p, m.i);
+      if (c > bestScore) { bestScore = c; best = m; }
+    });
+    if (bestScore > 0) return best;
+    return legals[Math.floor(Math.random() * legals.length)];
+  }
+
+  // Difficile : recherche sur 2 coups (le sien, puis la meilleure réplique adverse)
+  // pour éviter de laisser une capture facile à l'adversaire juste après.
+  let best = null, bestEval = -Infinity;
+  legals.forEach(m => {
+    const { sim, captured } = simulateFullMove(s, m.p, m.i);
+    let evalScore = captured * 10;
+
+    if (sim.status === "ended") {
+      if (sim.winner === p) evalScore += 1000;
+      else if (sim.winner) evalScore -= 1000;
+    } else {
+      // Pire réplique possible de l'adversaire juste après ce coup
+      const opp = other(p);
+      const oppLegals = getLegalMoves(sim);
+      let worstForUs = 0;
+      oppLegals.forEach(om => {
+        const oc = evaluateMoveCapture(sim, om.p, om.i);
+        if (oc > worstForUs) worstForUs = oc;
+      });
+      evalScore -= worstForUs * 9;
+      // Petit bonus pour garder des graines de son côté (sécurité générale)
+      evalScore += sum(sim.board[p]) * 0.2;
+    }
+
+    if (evalScore > bestEval) { bestEval = evalScore; best = m; }
+  });
+  return best || legals[0];
+}
+
+// Déclenche le tour de l'IA après un court délai, pour un rendu naturel
+function maybeTriggerAiTurn() {
+  if (gameMode !== "ai") return;
+  if (!G || G.status !== "playing") return;
+  if (G.currentPlayer !== aiPlayerRole) return;
+  if (isAnimating) return;
+
+  setTimeout(() => {
+    if (!G || G.status !== "playing" || G.currentPlayer !== aiPlayerRole || isAnimating) return;
+    const move = chooseAiMove(G, aiPlayerRole, aiDifficulty);
+    if (move) animateSowing(G, move.p, move.i);
+  }, 700 + Math.random() * 500);
+}
+
+// ═══════════════════════════════════════════════════════
 // ROUTAGE RÉSEAU MULTIJOUEUR (CONNECTÉ)
 // ═══════════════════════════════════════════════════════
 let gameMode = "local"; let onlineAction = "create";
@@ -551,8 +697,11 @@ function closeRulesModal() {
 function switchMode(m) {
   gameMode = m;
   document.getElementById("tab-local").classList.toggle("active", m==="local");
+  document.getElementById("tab-ai").classList.toggle("active", m==="ai");
   document.getElementById("tab-online").classList.toggle("active", m==="online");
-  document.getElementById("online-configuration").style.display = m==="online" ? "flex" : "none";
+  document.getElementById("local-configuration").style.display = m==="local" ? "block" : "none";
+  document.getElementById("ai-configuration").style.display = m==="ai" ? "block" : "none";
+  document.getElementById("online-configuration").style.display = m==="online" ? "block" : "none";
 }
 function switchOnlineAction(a) {
   onlineAction = a;
@@ -562,19 +711,33 @@ function switchOnlineAction(a) {
 }
 
 function initiateGameSession() {
-  const name = document.getElementById("input-name").value.trim() || "Guerrier";
   undoHistory = []; recommendedMove = null;
   startBackgroundMusic();
-   
+
   if(gameMode === "local") {
-    playerNames = { north: "SAGE DU VILLAGE", south: name.toUpperCase() };
+    const nameSouth = document.getElementById("input-name-south").value.trim() || "Sud";
+    const nameNorth = document.getElementById("input-name-north").value.trim() || "Nord";
+    playerNames = { north: nameNorth.toUpperCase(), south: nameSouth.toUpperCase() };
     G = createGame();
     initCore3DEngine();
     document.getElementById("screen-lobby").classList.remove("active");
     document.getElementById("game-hud").style.display = "flex";
     document.getElementById("btn-undo").style.display = "flex"; 
     syncLogicTo3DVisuals();
+  } else if(gameMode === "ai") {
+    const name = document.getElementById("input-name-ai").value.trim() || "Guerrier";
+    const aiLabel = aiDifficulty === "easy" ? "IA — FACILE" : (aiDifficulty === "medium" ? "IA — MOYEN" : "IA — DIFFICILE");
+    playerNames = { north: aiLabel, south: name.toUpperCase() };
+    aiPlayerRole = "north";
+    G = createGame();
+    initCore3DEngine();
+    document.getElementById("screen-lobby").classList.remove("active");
+    document.getElementById("game-hud").style.display = "flex";
+    document.getElementById("btn-undo").style.display = "flex";
+    syncLogicTo3DVisuals();
+    maybeTriggerAiTurn();
   } else {
+    const name = document.getElementById("input-name-online").value.trim() || "Guerrier";
     document.getElementById("screen-lobby").classList.remove("active");
     document.getElementById("screen-waiting").classList.add("active");
     connectToNetworkTunnel(name);
@@ -649,6 +812,7 @@ function connectToNetworkTunnel(name) {
 function requestStrategicAdvice() {
   if (!G || G.status !== "playing") return;
   if (gameMode === "online" && G.currentPlayer !== myRole) return;
+  if (gameMode === "ai" && G.currentPlayer === aiPlayerRole) return;
   const legals = getLegalMoves(G); if (legals.length === 0) return;
   let bestMove = legals[0]; let maxScore = -1;
   legals.forEach(m => {
@@ -660,10 +824,12 @@ function requestStrategicAdvice() {
 }
 
 function triggerUndoAction() {
-  if (undoHistory.length > 0 && G && G.status === "playing" && gameMode === "local" && !isAnimating) { 
-    G = undoHistory.pop(); 
-    recommendedMove = null; 
-    syncLogicTo3DVisuals(); 
+  if (undoHistory.length > 0 && G && G.status === "playing" && (gameMode === "local" || gameMode === "ai") && !isAnimating) {
+    G = undoHistory.pop();
+    recommendedMove = null;
+    syncLogicTo3DVisuals();
+    // En mode vs IA, si après l'annulation c'est de nouveau le tour de l'IA, on relance son tour
+    if (gameMode === "ai") maybeTriggerAiTurn();
   }
 }
 function exitToMainMenu() { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); location.reload(); }
@@ -996,6 +1162,9 @@ function animateSowing(s, p, i, options = {}) {
       if (incomingMoveQueue.length > 0) {
         const nextMove = incomingMoveQueue.shift();
         animateSowing(G, nextMove.player, nextMove.pitIndex);
+      } else {
+        // En mode vs IA, si c'est maintenant le tour de l'IA, on déclenche son coup
+        maybeTriggerAiTurn();
       }
     }
   }, totalDuration);
@@ -1057,8 +1226,11 @@ function syncLogicTo3DVisuals() {
   const label = document.getElementById("hud-turn-text");
   const glow = document.getElementById("turn-glow");
   const adviceBtn = document.getElementById("btn-advice");
-   
-  adviceBtn.style.display = (gameMode === "online" && G.currentPlayer !== myRole) || G.status !== "playing" ? "none" : "flex";
+
+  const isMyTurnBlocked =
+    (gameMode === "online" && G.currentPlayer !== myRole) ||
+    (gameMode === "ai" && G.currentPlayer === aiPlayerRole);
+  adviceBtn.style.display = isMyTurnBlocked || G.status !== "playing" ? "none" : "flex";
 
   if(G.status === "ended") {
     label.innerText = "Combat Clos"; glow.style.backgroundColor = "var(--accent-gold)";
@@ -1068,8 +1240,10 @@ function syncLogicTo3DVisuals() {
   } else {
     if(gameMode === "online") {
       label.innerText = G.currentPlayer === myRole ? "À ton tour !" : "L'adversaire réfléchit...";
+    } else if(gameMode === "ai") {
+      label.innerText = G.currentPlayer === aiPlayerRole ? "L'IA réfléchit..." : "À ton tour !";
     } else {
-      label.innerText = G.currentPlayer === "south" ? "Tour : Sud" : "Tour : Nord";
+      label.innerText = `Tour : ${playerNames[G.currentPlayer]}`;
     }
     glow.style.backgroundColor = G.currentPlayer === "south" ? "var(--accent-orange)" : "var(--accent-blue)";
   }
@@ -1085,11 +1259,15 @@ function syncLogicTo3DVisuals() {
     const { player, index, ringMesh } = pit.userData;
     const count = G.board[player][index];
     const isRecommended = recommendedMove && recommendedMove.p === player && recommendedMove.i === index;
+    const isHumanTurnHere =
+      (gameMode === "local") ||
+      (gameMode === "online" && G.currentPlayer === myRole) ||
+      (gameMode === "ai" && G.currentPlayer !== aiPlayerRole);
     const isPlayable = legals.some(m => m.p === player && m.i === index) && G.status === "playing";
      
     if (isRecommended) {
       ringMesh.material.color.setHex(0xfbbf24); ringMesh.material.opacity = 1.0; ringMesh.scale.setScalar(1.06);
-    } else if (isPlayable && (gameMode === "local" || G.currentPlayer === myRole)) {
+    } else if (isPlayable && isHumanTurnHere) {
       ringMesh.material.color.setHex(player === "north" ? 0x60a5fa : 0xf97316); ringMesh.material.opacity = 0.5; ringMesh.scale.setScalar(1.02);
     } else {
       ringMesh.material.color.setHex(player === "north" ? 0x60a5fa : 0xf97316); ringMesh.material.opacity = 0.05; ringMesh.scale.setScalar(1.0);
@@ -1116,6 +1294,7 @@ function syncLogicTo3DVisuals() {
 function handleAndroidTouchClick(e) {
   if(!G || G.status !== "playing" || isAnimating) return;
   if(gameMode === "online" && G.currentPlayer !== myRole) return; 
+  if(gameMode === "ai" && G.currentPlayer === aiPlayerRole) return;
   if (Date.now() - pointerStartTime > 200) return;
 
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
