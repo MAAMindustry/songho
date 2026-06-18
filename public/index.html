@@ -29,6 +29,16 @@
   -webkit-tap-highlight-color: transparent; 
 }
 
+/* FIX SCROLL : on réautorise explicitement le scroll vertical tactile
+   sur tous les conteneurs qui doivent défiler (le panneau des règles,
+   et le panneau glass en général au cas où son contenu dépasse). 
+   Sans ça, le touch-action:none global ci-dessus bloque tout swipe. */
+.rules-content,
+.glass-panel {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
 body, html {
   width: 100%; height: 100%; overflow: hidden;
   background-color: var(--bg-dark); color: var(--text-primary);
@@ -229,6 +239,43 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
   text-transform: uppercase; white-space: nowrap;
 }
 .capture-banner.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+/* ═══════════════════════════════════════════════════════
+   COMPTEURS DE GRAINES PAR TROU (overlay HTML 2D)
+   On affiche un badge numérique exact au-dessus de chaque
+   fosse 3D, positionné dynamiquement à chaque frame en
+   projetant la position 3D du trou vers l'écran. Cela
+   garantit que le nombre de graines est toujours lisible,
+   peu importe le nombre de gemmes empilées visuellement.
+   ═══════════════════════════════════════════════════════ */
+#pit-count-layer {
+  position: absolute; inset: 0; z-index: 8; pointer-events: none;
+  overflow: hidden;
+}
+.pit-count-badge {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 26px; height: 26px; padding: 0 6px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.85rem;
+  color: #1a0e02;
+  background: rgba(248, 250, 252, 0.92);
+  border: 2px solid rgba(0,0,0,0.25);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.pit-count-badge.empty {
+  background: rgba(10, 11, 18, 0.55);
+  color: var(--text-muted);
+  border-color: rgba(255,255,255,0.12);
+}
+.pit-count-badge.recommended {
+  background: var(--accent-gold);
+  border-color: rgba(255,255,255,0.5);
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow: 0 0 16px 4px rgba(251,191,36,0.55);
+}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -268,6 +315,7 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 
 <div id="cultural-bg"></div>
 <div id="canvas-container"></div>
+<div id="pit-count-layer"></div>
 
 <div id="screen-lobby" class="screen">
   <div class="glass-panel">
@@ -844,6 +892,7 @@ let isAnimating = false;
 let pendingEchoSkip = 0;
 let incomingMoveQueue = [];
 let pitMeshByKey = {};
+let pitBadgeByKey = {};
 
 // Génère une texture procédurale gravée de motifs géométriques beti
 // (losanges emboîtés "ezimi", triangles opposés "etun akong", lignes sinusoïdales)
@@ -944,6 +993,10 @@ function createBenchTopTexture() {
 function initCore3DEngine() {
   const container = document.getElementById("canvas-container");
   container.innerHTML = ""; pits3D = []; pitMeshByKey = {};
+
+  const badgeLayer = document.getElementById("pit-count-layer");
+  badgeLayer.innerHTML = ""; pitBadgeByKey = {};
+
   scene = new THREE.Scene(); 
    
   scene.fog = new THREE.FogExp2(0x0a0502, 0.035);
@@ -1018,6 +1071,13 @@ function createPremiumPit(player, idx, x, z) {
 
   mesh.userData = { player, index: idx, ringMesh: ring }; pits3D.push(mesh);
   pitMeshByKey[player + "_" + idx] = mesh;
+
+  // Badge HTML 2D affichant le compte exact de graines pour ce trou
+  const badge = document.createElement("div");
+  badge.className = "pit-count-badge";
+  badge.innerText = "5";
+  document.getElementById("pit-count-layer").appendChild(badge);
+  pitBadgeByKey[player + "_" + idx] = badge;
 }
 
 function pitWorldPos(player, idx, yOffset, seedIdx) {
@@ -1029,6 +1089,38 @@ function pitWorldPos(player, idx, yOffset, seedIdx) {
     1.28 + yOffset,
     mesh.position.z + Math.sin(angle) * radius
   );
+}
+
+// Projette la position 3D d'un trou vers des coordonnées écran (px) pour
+// positionner son badge de comptage HTML par-dessus le canvas WebGL.
+function updatePitBadgePositions() {
+  if (!camera || !renderer) return;
+  const widthHalf = window.innerWidth / 2;
+  const heightHalf = window.innerHeight / 2;
+
+  pits3D.forEach(pit => {
+    const key = pit.userData.player + "_" + pit.userData.index;
+    const badge = pitBadgeByKey[key];
+    if (!badge) return;
+
+    // On place le badge légèrement au-dessus du trou (sur l'axe Y du monde)
+    // pour qu'il reste visible même quand le tas de graines est haut.
+    const worldPos = pit.position.clone();
+    worldPos.y += 0.85;
+
+    const projected = worldPos.clone().project(camera);
+
+    // Si le point est derrière la caméra, on cache le badge plutôt que
+    // de le laisser apparaître à une position incorrecte.
+    if (projected.z > 1) { badge.style.display = "none"; return; }
+    badge.style.display = "flex";
+
+    const screenX = (projected.x * widthHalf) + widthHalf;
+    const screenY = -(projected.y * heightHalf) + heightHalf;
+
+    badge.style.left = screenX + "px";
+    badge.style.top = screenY + "px";
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1070,6 +1162,12 @@ function animateSowing(s, p, i, options = {}) {
     visualCounts[key] = s.board[pl][idx];
   }
   visualCounts[p + "_" + i] = 0;
+
+  // Le badge de la fosse source passe à 0 immédiatement (vidage visible tout de suite)
+  if (pitBadgeByKey[p + "_" + i]) {
+    pitBadgeByKey[p + "_" + i].innerText = "0";
+    pitBadgeByKey[p + "_" + i].classList.add("empty");
+  }
 
   const hopDuration = 260; // durée d'un saut entre deux fosses
   const stagger = 90;      // décalage entre le départ de chaque graine
@@ -1122,8 +1220,14 @@ function animateSowing(s, p, i, options = {}) {
         .to({ x: gem.rotation.x + Math.PI * 2, y: gem.rotation.y + Math.PI * 2 }, hopDuration)
         .start();
 
-      // Flash bref de l'anneau de la fosse d'arrivée à l'atterrissage
+      // Mise à jour du badge de la fosse de destination dès que la graine "atterrit" visuellement,
+      // pour que le compte affiché suive le rythme de l'animation plutôt que de sauter d'un coup à la fin.
       setTimeout(() => {
+        const destBadge = pitBadgeByKey[destKey];
+        if (destBadge) {
+          destBadge.innerText = String(seedIdxAtDest + 1);
+          destBadge.classList.remove("empty");
+        }
         const destMesh = pitMeshByKey[destKey];
         if (destMesh) {
           const ring = destMesh.userData.ringMesh;
@@ -1173,6 +1277,13 @@ function animateSowing(s, p, i, options = {}) {
 function triggerCaptureEffect(target, pts, capturingPlayer) {
   const destMesh = pitMeshByKey[target.p + "_" + target.i];
   if (!destMesh) return;
+
+  // La fosse capturée revient à 0 : on met le badge à jour immédiatement
+  const destBadge = pitBadgeByKey[target.p + "_" + target.i];
+  if (destBadge) {
+    destBadge.innerText = "0";
+    destBadge.classList.add("empty");
+  }
 
   // Pulsation dorée intense de l'anneau capturé
   const ring = destMesh.userData.ringMesh;
@@ -1273,6 +1384,15 @@ function syncLogicTo3DVisuals() {
       ringMesh.material.color.setHex(player === "north" ? 0x60a5fa : 0xf97316); ringMesh.material.opacity = 0.05; ringMesh.scale.setScalar(1.0);
     }
 
+    // Synchronisation du badge de comptage HTML avec l'état logique exact
+    const badgeKey = player + "_" + index;
+    const badge = pitBadgeByKey[badgeKey];
+    if (badge) {
+      badge.innerText = String(count);
+      badge.classList.toggle("empty", count === 0);
+      badge.classList.toggle("recommended", !!isRecommended);
+    }
+
     for(let k=0; k<count; k++) {
       const gemMesh = new THREE.Mesh(gemGeo, k % 3 === 0 ? copperMat : goldMat);
       const angle = k * 1.40; const radius = Math.min(0.34, 0.055 * k);
@@ -1327,6 +1447,7 @@ function animateFrameLoop() {
       }
     });
   }
+  updatePitBadgePositions();
   renderer.render(scene, camera);
 }
 
