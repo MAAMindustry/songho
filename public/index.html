@@ -240,42 +240,6 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 }
 .capture-banner.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
-/* ═══════════════════════════════════════════════════════
-   COMPTEURS DE GRAINES PAR TROU (overlay HTML 2D)
-   On affiche un badge numérique exact au-dessus de chaque
-   fosse 3D, positionné dynamiquement à chaque frame en
-   projetant la position 3D du trou vers l'écran. Cela
-   garantit que le nombre de graines est toujours lisible,
-   peu importe le nombre de gemmes empilées visuellement.
-   ═══════════════════════════════════════════════════════ */
-#pit-count-layer {
-  position: absolute; inset: 0; z-index: 8; pointer-events: none;
-  overflow: hidden;
-}
-.pit-count-badge {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  min-width: 26px; height: 26px; padding: 0 6px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.85rem;
-  color: #1a0e02;
-  background: rgba(248, 250, 252, 0.92);
-  border: 2px solid rgba(0,0,0,0.25);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-}
-.pit-count-badge.empty {
-  background: rgba(10, 11, 18, 0.55);
-  color: var(--text-muted);
-  border-color: rgba(255,255,255,0.12);
-}
-.pit-count-badge.recommended {
-  background: var(--accent-gold);
-  border-color: rgba(255,255,255,0.5);
-  transform: translate(-50%, -50%) scale(1.18);
-  box-shadow: 0 0 16px 4px rgba(251,191,36,0.55);
-}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -315,7 +279,6 @@ h1 span { background: linear-gradient(135deg, var(--accent-gold), #f59e0b); -web
 
 <div id="cultural-bg"></div>
 <div id="canvas-container"></div>
-<div id="pit-count-layer"></div>
 
 <div id="screen-lobby" class="screen">
   <div class="glass-panel">
@@ -892,7 +855,7 @@ let isAnimating = false;
 let pendingEchoSkip = 0;
 let incomingMoveQueue = [];
 let pitMeshByKey = {};
-let pitBadgeByKey = {};
+let pitShadowTexture = null;
 
 // Génère une texture procédurale gravée de motifs géométriques beti
 // (losanges emboîtés "ezimi", triangles opposés "etun akong", lignes sinusoïdales)
@@ -990,12 +953,28 @@ function createBenchTopTexture() {
   return texture;
 }
 
+// Texture radiale sombre au centre et transparente sur les bords,
+// plaquée juste au-dessus de la surface de chaque trou pour simuler
+// une ombre d'occlusion et donner l'impression que le trou est creux.
+function createPitShadowTexture() {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createRadialGradient(size/2, size/2, size*0.03, size/2, size/2, size/2);
+  grad.addColorStop(0, 'rgba(0,0,0,0.88)');
+  grad.addColorStop(0.45, 'rgba(0,0,0,0.62)');
+  grad.addColorStop(0.75, 'rgba(0,0,0,0.28)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(canvas);
+}
+
 function initCore3DEngine() {
   const container = document.getElementById("canvas-container");
   container.innerHTML = ""; pits3D = []; pitMeshByKey = {};
-
-  const badgeLayer = document.getElementById("pit-count-layer");
-  badgeLayer.innerHTML = ""; pitBadgeByKey = {};
+  pitShadowTexture = createPitShadowTexture();
 
   scene = new THREE.Scene(); 
    
@@ -1056,11 +1035,22 @@ function initCore3DEngine() {
 }
 
 function createPremiumPit(player, idx, x, z) {
+  // Intérieur du trou : gris-bleu ardoise, comme sur le banc réel qui a
+  // servi de référence (plutôt qu'un simple bois sombre).
   const pitGeo = new THREE.CylinderGeometry(0.76, 0.60, 0.15, 24);
   const pitMat = new THREE.MeshStandardMaterial({ 
-    color: 0x0f0704, roughness: 0.6, metalness: 0.2
+    color: 0x4a545f, roughness: 0.75, metalness: 0.05
   });
   const mesh = new THREE.Mesh(pitGeo, pitMat); mesh.position.set(x, 1.20, z); scene.add(mesh);
+
+  // Rebord marron/brique peint autour de l'ouverture du trou, fidèle au
+  // banc de référence : un tore fixe, distinct du halo de surbrillance de tour.
+  const rimGeo = new THREE.TorusGeometry(0.78, 0.06, 10, 28);
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x7a3524, roughness: 0.55, metalness: 0.1 });
+  const rimMesh = new THREE.Mesh(rimGeo, rimMat);
+  rimMesh.rotation.x = Math.PI / 2;
+  rimMesh.position.set(x, 1.245, z);
+  scene.add(rimMesh);
    
   const ringGeo = new THREE.RingGeometry(0.76, 0.81, 30);
   const ringMat = new THREE.MeshBasicMaterial({ 
@@ -1072,55 +1062,66 @@ function createPremiumPit(player, idx, x, z) {
   mesh.userData = { player, index: idx, ringMesh: ring }; pits3D.push(mesh);
   pitMeshByKey[player + "_" + idx] = mesh;
 
-  // Badge HTML 2D affichant le compte exact de graines pour ce trou
-  const badge = document.createElement("div");
-  badge.className = "pit-count-badge";
-  badge.innerText = "5";
-  document.getElementById("pit-count-layer").appendChild(badge);
-  pitBadgeByKey[player + "_" + idx] = badge;
+  // Disque d'ombre radiale posé juste au-dessus de la surface du trou :
+  // donne l'impression que le trou est réellement creux, même si sa
+  // géométrie de base (cylindre) est peu profonde.
+  const shadowGeo = new THREE.CircleGeometry(0.72, 32);
+  const shadowMat = new THREE.MeshBasicMaterial({ map: pitShadowTexture, transparent: true, depthWrite: false });
+  const shadowDisc = new THREE.Mesh(shadowGeo, shadowMat);
+  shadowDisc.rotation.x = -Math.PI / 2;
+  shadowDisc.position.set(x, 1.277, z);
+  scene.add(shadowDisc);
 }
+
+// Compartiments de rangement aux deux extrémités du banc, comme sur le
+// banc de référence (là où les graines capturées sont habituellement
+// entreposées) : une simple alcôve rectangulaire assombrie.
+function createStorageCompartments() {
+  const storeMat = new THREE.MeshStandardMaterial({ color: 0x1c0f08, roughness: 0.55, metalness: 0.05 });
+  const storeRimMat = new THREE.MeshStandardMaterial({ color: 0x7a3524, roughness: 0.55, metalness: 0.1 });
+
+  [-1, 1].forEach(side => {
+    const storeX = side * 6.45;
+
+    const storeGeo = new THREE.BoxGeometry(0.7, 0.15, 3.4);
+    const storeMesh = new THREE.Mesh(storeGeo, storeMat);
+    storeMesh.position.set(storeX, 1.20, 0);
+    scene.add(storeMesh);
+
+    const storeShadowGeo = new THREE.PlaneGeometry(0.62, 3.2);
+    const storeShadowMat = new THREE.MeshBasicMaterial({ map: pitShadowTexture, transparent: true, depthWrite: false });
+    const storeShadow = new THREE.Mesh(storeShadowGeo, storeShadowMat);
+    storeShadow.rotation.x = -Math.PI / 2;
+    storeShadow.position.set(storeX, 1.258, 0);
+    scene.add(storeShadow);
+
+    const storeRimGeo = new THREE.BoxGeometry(0.78, 0.05, 3.48);
+    const storeRimMesh = new THREE.Mesh(storeRimGeo, storeRimMat);
+    storeRimMesh.position.set(storeX, 1.245, 0);
+    scene.add(storeRimMesh);
+  });
+}
+
+// Répartition des graines dans un trou : on utilise une spirale à "angle d'or"
+// (~137.5°), comme les graines de tournesol, pour que chaque graine occupe une
+// place bien distincte plutôt que de s'empiler au centre. Au-delà de
+// SEEDS_PER_LAYER graines, on ajoute une nouvelle couche visible au-dessus
+// pour que le total reste lisible visuellement d'un coup d'œil.
+const SEEDS_PER_LAYER = 9;
+const GOLDEN_ANGLE = 2.4; // radians, ≈ 137.5°
 
 function pitWorldPos(player, idx, yOffset, seedIdx) {
   const mesh = pitMeshByKey[player + "_" + idx];
-  const angle = (seedIdx || 0) * 1.40;
-  const radius = Math.min(0.34, 0.055 * (seedIdx || 0));
+  const k = seedIdx || 0;
+  const layer = Math.floor(k / SEEDS_PER_LAYER);
+  const posInLayer = k % SEEDS_PER_LAYER;
+  const angle = posInLayer * GOLDEN_ANGLE + layer * 0.9;
+  const radius = Math.min(0.52, 0.16 * Math.sqrt(posInLayer + 1));
   return new THREE.Vector3(
     mesh.position.x + Math.cos(angle) * radius,
-    1.28 + yOffset,
+    1.28 + yOffset + layer * 0.12,
     mesh.position.z + Math.sin(angle) * radius
   );
-}
-
-// Projette la position 3D d'un trou vers des coordonnées écran (px) pour
-// positionner son badge de comptage HTML par-dessus le canvas WebGL.
-function updatePitBadgePositions() {
-  if (!camera || !renderer) return;
-  const widthHalf = window.innerWidth / 2;
-  const heightHalf = window.innerHeight / 2;
-
-  pits3D.forEach(pit => {
-    const key = pit.userData.player + "_" + pit.userData.index;
-    const badge = pitBadgeByKey[key];
-    if (!badge) return;
-
-    // On place le badge légèrement au-dessus du trou (sur l'axe Y du monde)
-    // pour qu'il reste visible même quand le tas de graines est haut.
-    const worldPos = pit.position.clone();
-    worldPos.y += 0.85;
-
-    const projected = worldPos.clone().project(camera);
-
-    // Si le point est derrière la caméra, on cache le badge plutôt que
-    // de le laisser apparaître à une position incorrecte.
-    if (projected.z > 1) { badge.style.display = "none"; return; }
-    badge.style.display = "flex";
-
-    const screenX = (projected.x * widthHalf) + widthHalf;
-    const screenY = -(projected.y * heightHalf) + heightHalf;
-
-    badge.style.left = screenX + "px";
-    badge.style.top = screenY + "px";
-  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1163,12 +1164,6 @@ function animateSowing(s, p, i, options = {}) {
   }
   visualCounts[p + "_" + i] = 0;
 
-  // Le badge de la fosse source passe à 0 immédiatement (vidage visible tout de suite)
-  if (pitBadgeByKey[p + "_" + i]) {
-    pitBadgeByKey[p + "_" + i].innerText = "0";
-    pitBadgeByKey[p + "_" + i].classList.add("empty");
-  }
-
   const hopDuration = 260; // durée d'un saut entre deux fosses
   const stagger = 90;      // décalage entre le départ de chaque graine
   let captureFired = false;
@@ -1192,7 +1187,7 @@ function animateSowing(s, p, i, options = {}) {
       const destKey = finalStop.p + "_" + finalStop.i;
       const seedIdxAtDest = visualCounts[destKey];
       visualCounts[destKey] = seedIdxAtDest + 1;
-      const target = pitWorldPos(finalStop.p, finalStop.i, Math.floor(seedIdxAtDest / 5) * 0.10, seedIdxAtDest);
+      const target = pitWorldPos(finalStop.p, finalStop.i, 0, seedIdxAtDest);
 
       // Hauteur de l'arc proportionnelle à la distance pour un effet "lancer" dynamique
       const dist = sourcePos3D.distanceTo(target);
@@ -1220,14 +1215,8 @@ function animateSowing(s, p, i, options = {}) {
         .to({ x: gem.rotation.x + Math.PI * 2, y: gem.rotation.y + Math.PI * 2 }, hopDuration)
         .start();
 
-      // Mise à jour du badge de la fosse de destination dès que la graine "atterrit" visuellement,
-      // pour que le compte affiché suive le rythme de l'animation plutôt que de sauter d'un coup à la fin.
+      // Petit flash lumineux sur l'anneau de la fosse de destination dès que la graine "atterrit"
       setTimeout(() => {
-        const destBadge = pitBadgeByKey[destKey];
-        if (destBadge) {
-          destBadge.innerText = String(seedIdxAtDest + 1);
-          destBadge.classList.remove("empty");
-        }
         const destMesh = pitMeshByKey[destKey];
         if (destMesh) {
           const ring = destMesh.userData.ringMesh;
@@ -1277,13 +1266,6 @@ function animateSowing(s, p, i, options = {}) {
 function triggerCaptureEffect(target, pts, capturingPlayer) {
   const destMesh = pitMeshByKey[target.p + "_" + target.i];
   if (!destMesh) return;
-
-  // La fosse capturée revient à 0 : on met le badge à jour immédiatement
-  const destBadge = pitBadgeByKey[target.p + "_" + target.i];
-  if (destBadge) {
-    destBadge.innerText = "0";
-    destBadge.classList.add("empty");
-  }
 
   // Pulsation dorée intense de l'anneau capturé
   const ring = destMesh.userData.ringMesh;
@@ -1384,27 +1366,13 @@ function syncLogicTo3DVisuals() {
       ringMesh.material.color.setHex(player === "north" ? 0x60a5fa : 0xf97316); ringMesh.material.opacity = 0.05; ringMesh.scale.setScalar(1.0);
     }
 
-    // Synchronisation du badge de comptage HTML avec l'état logique exact
-    const badgeKey = player + "_" + index;
-    const badge = pitBadgeByKey[badgeKey];
-    if (badge) {
-      badge.innerText = String(count);
-      badge.classList.toggle("empty", count === 0);
-      badge.classList.toggle("recommended", !!isRecommended);
-    }
-
     for(let k=0; k<count; k++) {
       const gemMesh = new THREE.Mesh(gemGeo, k % 3 === 0 ? copperMat : goldMat);
-      const angle = k * 1.40; const radius = Math.min(0.34, 0.055 * k);
-      const targetY = 1.28 + (Math.floor(k / 5) * 0.10);
-       
-      gemMesh.position.set(
-        pit.position.x + Math.cos(angle) * radius,
-        targetY + 2.0,
-        pit.position.z + Math.sin(angle) * radius
-      );
-       
-      new TWEEN.Tween(gemMesh.position).to({ y: targetY }, 350 + (k*15)).easing(TWEEN.Easing.Bounce.Out).start();
+      const target = pitWorldPos(player, index, 0, k);
+
+      gemMesh.position.set(target.x, target.y + 2.0, target.z);
+
+      new TWEEN.Tween(gemMesh.position).to({ y: target.y }, 350 + (k*15)).easing(TWEEN.Easing.Bounce.Out).start();
       gemMesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
       seedsGroup.add(gemMesh);
     }
@@ -1447,7 +1415,6 @@ function animateFrameLoop() {
       }
     });
   }
-  updatePitBadgePositions();
   renderer.render(scene, camera);
 }
 
